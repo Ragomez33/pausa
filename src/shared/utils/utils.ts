@@ -18,3 +18,29 @@ export function calculateSupplyDuration(
   }
   return Math.floor(remainingCigarettes / dailyTarget);
 }
+
+export function formatElapsedDuration(elapsedMs: number): string {
+  const safeMs = Number.isFinite(elapsedMs) ? Math.max(0, elapsedMs) : 0;
+  const totalMinutes = Math.floor(safeMs / 60_000);
+
+  if (totalMinutes <= 0) {
+    return '0m';
+  }
+
+  const days = Math.floor(totalMinutes / 1_440);
+  const hours = Math.floor((totalMinutes % 1_440) / 60);
+  const minutes = totalMinutes % 60;
+  const parts: string[] = [];
+
+  if (days > 0) {
+    parts.push(`${days}d`);
+  }
+  if (hours > 0) {
+    parts.push(`${hours}h`);
+  }
+  if (minutes > 0) {
+    parts.push(`${minutes}m`);
+  }
+
+  return parts.join(' ');
+}

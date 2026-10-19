@@ -22,6 +22,8 @@ interface HomeMetricsState {
   error: Error | null;
 }
 
+const REFRESH_INTERVAL_MS = 30_000;
+
 export function useHomeMetrics(): UseHomeMetricsResult {
   const [state, setState] = useState<HomeMetricsState>({
     loading: true,
@@ -41,7 +43,7 @@ export function useHomeMetrics(): UseHomeMetricsResult {
       setState({
         loading: false,
         hasProfile: true,
-        metrics: computeHomeMetrics(profile, events),
+        metrics: computeHomeMetrics(profile, events, Date.now()),
         error: null,
       });
     } catch (caught) {
@@ -57,6 +59,8 @@ export function useHomeMetrics(): UseHomeMetricsResult {
   useFocusEffect(
     useCallback(() => {
       load();
+      const interval = setInterval(load, REFRESH_INTERVAL_MS);
+      return () => clearInterval(interval);
     }, [load]),
   );
 

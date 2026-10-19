@@ -1,27 +1,70 @@
-import { CIGARETTES_PER_PACK } from '@/shared/constants/app';
 import type { PauseEvent, UserProfile } from '@/db/schema';
+import { CIGARETTES_PER_PACK } from '@/shared/constants/app';
 import type { HomeMetrics } from '@/shared/types/global';
+
+export const DAY_MS = 86_400_000;
+
+function parseTimestamp(value: string): number | null {
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+export function resolveStreakStart(profile: UserProfile, events: PauseEvent[]): number {
+  const profileStart = parseTimestamp(profile.createdAt) ?? 0;
+  let latestCeded: number | null = null;
+
+  for (const event of events) {
+    if (event.resisted !== 0) {
+      continue;
+    }
+    const parsed = parseTimestamp(event.timestamp);
+    if (parsed !== null && (latestCeded === null || parsed > latestCeded)) {
+      latestCeded = parsed;
+    }
+  }
+
+  if (latestCeded !== null && latestCeded > profileStart) {
+    return latestCeded;
+  }
+  return profileStart;
+}
+
+export function computeElapsedMs(streakStartMs: number, nowMs: number): number {
+  if (!Number.isFinite(streakStartMs) || !Number.isFinite(nowMs)) {
+    return 0;
+  }
+  return Math.max(0, nowMs - streakStartMs);
+}
+
+export function computeAvoidedCigarettes(
+  dailyCigarettes: number,
+  elapsedMs: number,
+): number {
+  if (!Number.isFinite(dailyCigarettes) || dailyCigarettes <= 0) {
+    return 0;
+  }
+  if (!Number.isFinite(elapsedMs) || elapsedMs <= 0) {
+    return 0;
+  }
+  return dailyCigarettes * (elapsedMs / DAY_MS);
+}
+
+export function computeMoneySaved(avoidedCigarettes: number, packCost: number): number {
+  if (!Number.isFinite(avoidedCigarettes) || avoidedCigarettes <= 0) {
+    return 0;
+  }
+  if (!Number.isFinite(packCost) || packCost <= 0) {
+    return 0;
+  }
+  return (avoidedCigarettes / CIGARETTES_PER_PACK) * packCost;
+}
 
 export function countResisted(events: PauseEvent[]): number {
   return events.filter((event) => event.resisted === 1).length;
 }
 
-export function currentStreak(events: PauseEvent[]): number {
-  let streak = 0;
-  for (const event of events) {
-    if (event.resisted !== 1) {
-      break;
-    }
-    streak += 1;
-  }
-  return streak;
-}
-
-export function calculateMoneySaved(resistedCount: number, packCost: number): number {
-  if (packCost <= 0 || resistedCount <= 0) {
-    return 0;
-  }
-  return (resistedCount * packCost) / CIGARETTES_PER_PACK;
+export function countCeded(events: PauseEvent[]): number {
+  return events.filter((event) => event.resisted === 0).length;
 }
 
 export function formatMoney(amount: number, currency: string): string {
@@ -36,15 +79,30 @@ export function formatMoney(amount: number, currency: string): string {
   }
 }
 
+export function formatCigarettes(amount: number): string {
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return '0';
+  }
+  return amount.toFixed(1).replace(/\.0$/, '');
+}
+
 export function computeHomeMetrics(
   profile: UserProfile,
   events: PauseEvent[],
+  nowMs: number,
 ): HomeMetrics {
-  const resistedCount = countResisted(events);
+  const streakStartMs = resolveStreakStart(profile, events);
+  const elapsedMs = computeElapsedMs(streakStartMs, nowMs);
+  const avoidedCigarettes = computeAvoidedCigarettes(profile.dailyCigarettes, elapsedMs);
+  const moneySaved = computeMoneySaved(avoidedCigarettes, profile.packCost);
+
   return {
-    resistedCount,
-    currentStreak: currentStreak(events),
-    moneySaved: calculateMoneySaved(resistedCount, profile.packCost),
+    resistedCount: countResisted(events),
+    cededCount: countCeded(events),
+    elapsedMs,
+    streakStart: new Date(streakStartMs).toISOString(),
+    avoidedCigarettes,
+    moneySaved,
     currency: profile.currency,
   };
 }

@@ -4,10 +4,10 @@ export type ActiveModal = 'NONE' | 'BUY_SUPPLY' | 'CONFIRM_SMOKE' | 'GOAL_SETTIN
 
 export type TriggerEmotion =
   | 'anxiety'
-  | 'work_stress'
-  | 'coffee_social'
+  | 'stress'
   | 'boredom'
-  | 'other';
+  | 'habit_social'
+  | 'anger_frustration';
 
 export interface DatabaseStatus {
   ready: boolean;
@@ -28,7 +28,10 @@ export interface ProfileFormValues {
 
 export interface HomeMetrics {
   resistedCount: number;
-  currentStreak: number;
+  cededCount: number;
+  elapsedMs: number;
+  streakStart: string;
+  avoidedCigarettes: number;
   moneySaved: number;
   currency: string;
 }
