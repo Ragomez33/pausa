@@ -65,7 +65,10 @@
     "testMatch": [
       "**/*.test.ts",
       "**/*.test.tsx"
-    ]
+    ],
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1"
+    }
   },
   "private": true
 }

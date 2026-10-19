@@ -8,6 +8,13 @@
       "when": 1792346116371,
       "tag": "0000_oval_red_hulk",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1792352548257,
+      "tag": "0001_high_hellcat",
+      "breakpoints": true
     }
   ]
 }
