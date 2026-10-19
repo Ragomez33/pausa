@@ -6,6 +6,7 @@ import {
   pauseEvents,
   supplyInventory,
   smokeLogs,
+  userBadges,
   userProfile,
   type InventoryLog,
   type NewInventoryLog,
@@ -14,6 +15,7 @@ import {
   type PauseEvent,
   type SmokeLog,
   type SupplyInventoryItem,
+  type UserBadge,
   type UserProfile,
 } from './schema';
 import type { PauseTotals, TriggerCount } from '@/shared/types/global';
@@ -113,4 +115,24 @@ export function listInventoryLogs(): InventoryLog[] {
 
 export function createInventoryLog(input: NewInventoryLog): InventoryLog {
   return db.insert(inventoryLogs).values(input).returning().get();
+}
+
+export function listUserBadges(): UserBadge[] {
+  return db
+    .select()
+    .from(userBadges)
+    .orderBy(desc(userBadges.unlockedAt))
+    .all();
+}
+
+export function unlockBadges(
+  entries: { badgeKey: string; unlockedAt: string }[],
+): void {
+  if (entries.length === 0) {
+    return;
+  }
+  db.insert(userBadges)
+    .values(entries)
+    .onConflictDoNothing({ target: userBadges.badgeKey })
+    .run();
 }

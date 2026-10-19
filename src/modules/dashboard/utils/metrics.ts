@@ -1,63 +1,33 @@
 import type { InventoryLog, PauseEvent, UserProfile } from '@/db/schema';
-import { CIGARETTES_PER_PACK } from '@/shared/constants/app';
 import type { HomeMetrics } from '@/shared/types/global';
+import {
+  DAY_MS,
+  computeAvoidedCigarettes,
+  computeElapsedMs,
+  computeMoneySaved,
+  parseIsoTimestamp,
+  resolveStreakStartMs,
+} from '@/shared/utils/derivedMetrics';
 import { computeInventorySummary } from '@/shared/utils/inventory';
 
-export const DAY_MS = 86_400_000;
-
-function parseTimestamp(value: string): number | null {
-  const parsed = Date.parse(value);
-  return Number.isFinite(parsed) ? parsed : null;
-}
+export { DAY_MS, computeAvoidedCigarettes, computeElapsedMs, computeMoneySaved };
 
 export function resolveStreakStart(profile: UserProfile, events: PauseEvent[]): number {
-  const profileStart = parseTimestamp(profile.createdAt) ?? 0;
-  let latestCeded: number | null = null;
+  let latestCeded: string | null = null;
+  let latestCededMs: number | null = null;
 
   for (const event of events) {
     if (event.resisted !== 0) {
       continue;
     }
-    const parsed = parseTimestamp(event.timestamp);
-    if (parsed !== null && (latestCeded === null || parsed > latestCeded)) {
-      latestCeded = parsed;
+    const parsed = parseIsoTimestamp(event.timestamp);
+    if (parsed !== null && (latestCededMs === null || parsed > latestCededMs)) {
+      latestCeded = event.timestamp;
+      latestCededMs = parsed;
     }
   }
 
-  if (latestCeded !== null && latestCeded > profileStart) {
-    return latestCeded;
-  }
-  return profileStart;
-}
-
-export function computeElapsedMs(streakStartMs: number, nowMs: number): number {
-  if (!Number.isFinite(streakStartMs) || !Number.isFinite(nowMs)) {
-    return 0;
-  }
-  return Math.max(0, nowMs - streakStartMs);
-}
-
-export function computeAvoidedCigarettes(
-  dailyCigarettes: number,
-  elapsedMs: number,
-): number {
-  if (!Number.isFinite(dailyCigarettes) || dailyCigarettes <= 0) {
-    return 0;
-  }
-  if (!Number.isFinite(elapsedMs) || elapsedMs <= 0) {
-    return 0;
-  }
-  return dailyCigarettes * (elapsedMs / DAY_MS);
-}
-
-export function computeMoneySaved(avoidedCigarettes: number, packCost: number): number {
-  if (!Number.isFinite(avoidedCigarettes) || avoidedCigarettes <= 0) {
-    return 0;
-  }
-  if (!Number.isFinite(packCost) || packCost <= 0) {
-    return 0;
-  }
-  return (avoidedCigarettes / CIGARETTES_PER_PACK) * packCost;
+  return resolveStreakStartMs(profile.createdAt, latestCeded);
 }
 
 export function countResisted(events: PauseEvent[]): number {

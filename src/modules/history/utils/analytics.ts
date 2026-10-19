@@ -1,7 +1,7 @@
 import type { PauseTotals, TriggerCount } from '@/shared/types/global';
+import { DAY_MS, resolveStreakStartMs } from '@/shared/utils/derivedMetrics';
 import { getTriggerLabel } from '@/shared/utils/triggers';
 
-const DAY_MS = 86_400_000;
 const HOUR_MS = 3_600_000;
 
 export interface TriggerBreakdown {
@@ -23,14 +23,6 @@ export interface PauseAnalytics {
   triggers: TriggerBreakdown[];
 }
 
-function parseTimestamp(value: string | null): number | null {
-  if (value === null) {
-    return null;
-  }
-  const parsed = Date.parse(value);
-  return Number.isFinite(parsed) ? parsed : null;
-}
-
 export function computeSuccessRate(resisted: number, total: number): number {
   if (!Number.isFinite(resisted) || !Number.isFinite(total) || total <= 0) {
     return 0;
@@ -42,13 +34,7 @@ export function computeStreakStart(
   profileCreatedAt: string,
   latestCededTimestamp: string | null,
 ): number {
-  const profileStart = parseTimestamp(profileCreatedAt) ?? 0;
-  const cededStart = parseTimestamp(latestCededTimestamp);
-
-  if (cededStart !== null && cededStart > profileStart) {
-    return cededStart;
-  }
-  return profileStart;
+  return resolveStreakStartMs(profileCreatedAt, latestCededTimestamp);
 }
 
 export function computeStreakParts(elapsedMs: number): { days: number; hours: number } {

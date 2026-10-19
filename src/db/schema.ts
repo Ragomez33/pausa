@@ -1,4 +1,4 @@
-import { index, integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { index, integer, real, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
 export const userProfile = sqliteTable('user_profile', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -46,6 +46,16 @@ export const inventoryLogs = sqliteTable(
   (table) => [index('idx_inventory_logs_timestamp').on(table.timestamp)],
 );
 
+export const userBadges = sqliteTable(
+  'user_badges',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    badgeKey: text('badge_key').notNull(),
+    unlockedAt: text('unlocked_at').notNull(),
+  },
+  (table) => [uniqueIndex('idx_user_badges_badge_key').on(table.badgeKey)],
+);
+
 export const pauseEvents = sqliteTable(
   'pause_events',
   {
@@ -68,3 +78,5 @@ export type PauseEvent = typeof pauseEvents.$inferSelect;
 export type NewPauseEvent = typeof pauseEvents.$inferInsert;
 export type InventoryLog = typeof inventoryLogs.$inferSelect;
 export type NewInventoryLog = typeof inventoryLogs.$inferInsert;
+export type UserBadge = typeof userBadges.$inferSelect;
+export type NewUserBadge = typeof userBadges.$inferInsert;

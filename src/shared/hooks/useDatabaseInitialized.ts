@@ -33,6 +33,12 @@ CREATE TABLE IF NOT EXISTS \`inventory_logs\` (
   \`cost\` real
 );
 CREATE INDEX IF NOT EXISTS \`idx_inventory_logs_timestamp\` ON \`inventory_logs\` (\`timestamp\`);
+CREATE TABLE IF NOT EXISTS \`user_badges\` (
+  \`id\` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+  \`badge_key\` text NOT NULL,
+  \`unlocked_at\` text NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS \`idx_user_badges_badge_key\` ON \`user_badges\` (\`badge_key\`);
 `;
 
 function toError(caught: unknown): Error {

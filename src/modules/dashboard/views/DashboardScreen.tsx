@@ -6,6 +6,8 @@ import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'rea
 
 import { formatElapsedDuration, formatMoney } from '@/shared/utils/utils';
 
+import { useBadgeEvaluation } from '@/modules/badges/hooks/useBadgeEvaluation';
+
 import { useHomeMetrics } from '../hooks/useHomeMetrics';
 import { getFeedbackMessage } from '../utils/feedback';
 import { formatCigarettes } from '../utils/metrics';
@@ -16,6 +18,7 @@ export function DashboardScreen(): ReactElement {
   const feedbackParam = typeof params.feedback === 'string' ? params.feedback : undefined;
   const [banner, setBanner] = useState<string | null>(null);
   const { loading, hasProfile, metrics, error } = useHomeMetrics();
+  useBadgeEvaluation();
 
   useEffect(() => {
     const message = getFeedbackMessage(feedbackParam);
@@ -63,6 +66,12 @@ export function DashboardScreen(): ReactElement {
             className="rounded-full bg-slate-800 px-3 py-2"
           >
             <Text className="text-sm font-semibold text-emerald-400">Inventario</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => router.push('/badges')}
+            className="rounded-full bg-slate-800 px-3 py-2"
+          >
+            <Text className="text-sm font-semibold text-emerald-400">Logros</Text>
           </TouchableOpacity>
         </View>
       </View>
