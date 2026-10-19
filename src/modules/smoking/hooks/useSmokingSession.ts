@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { SmokingTrigger } from '@/shared/constants/smoking';
+import { resetIdleNotificationFromProfile } from '@/shared/utils/notifications';
 import { showAppToast } from '@/shared/utils/toast';
 
 import { completeSmokingSession } from '../utils/service';
@@ -75,6 +76,7 @@ export function useSmokingSession(trigger: SmokingTrigger): UseSmokingSessionRes
 
     setPromptVisible(false);
     setFinishing(false);
+    void resetIdleNotificationFromProfile();
     showAppToast({
       title: 'Sesión registrada',
       description: result.inventoryDecremented

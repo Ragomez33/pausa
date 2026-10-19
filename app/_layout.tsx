@@ -9,11 +9,13 @@ import { ActivityIndicator, Text, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useDatabaseInitialized } from '@/shared/hooks/useDatabaseInitialized';
+import { useIdleNotifications } from '@/shared/hooks/useIdleNotifications';
 import { configureNotificationHandler } from '@/shared/utils/notifications';
 import { shouldRedirectToOnboarding } from '@/shared/utils/routing';
 
 export default function RootLayout(): ReactElement {
   const { ready, hasProfile, error, refresh } = useDatabaseInitialized();
+  useIdleNotifications(ready, hasProfile);
   const router = useRouter();
   const pathname = usePathname();
   const segments = useSegments();

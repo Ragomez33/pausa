@@ -3,6 +3,7 @@ import { useCallback, useRef, useState } from 'react';
 import { incrementPostponedCount } from '@/db/queries';
 import { AWARENESS_MESSAGES } from '@/shared/constants/messages';
 import { SMOKING_TRIGGER_LABELS, type SmokingTrigger } from '@/shared/constants/smoking';
+import { resetIdleNotificationFromProfile } from '@/shared/utils/notifications';
 import { showAppToast } from '@/shared/utils/toast';
 
 import type { AwarenessStep } from '../utils/constants';
@@ -43,6 +44,7 @@ export function useAwarenessLoop(): UseAwarenessLoopResult {
       return false;
     }
 
+    void resetIdleNotificationFromProfile();
     showAppToast({
       title: 'Pausa registrada',
       description: POSTPONE_POSITIVE_MESSAGE,

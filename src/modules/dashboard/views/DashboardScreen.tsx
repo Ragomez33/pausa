@@ -7,7 +7,6 @@ import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'rea
 import { formatElapsedDuration, formatMoney } from '@/shared/utils/utils';
 
 import { useBadgeEvaluation } from '@/modules/badges/hooks/useBadgeEvaluation';
-import { useInactivityReminders } from '@/shared/hooks/useInactivityReminders';
 
 import { useHomeMetrics } from '../hooks/useHomeMetrics';
 import { getFeedbackMessage } from '../utils/feedback';
@@ -20,7 +19,6 @@ export function DashboardScreen(): ReactElement {
   const [banner, setBanner] = useState<string | null>(null);
   const { loading, hasProfile, metrics, error } = useHomeMetrics();
   useBadgeEvaluation();
-  useInactivityReminders();
 
   useEffect(() => {
     const message = getFeedbackMessage(feedbackParam);

@@ -1,14 +1,41 @@
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 
+import { getProfile } from '@/db/queries';
 import {
-  DEFAULT_WAKING_HOURS,
-  buildReminderDates,
-  calculateReminderIntervalMinutes,
-} from './reminderSchedule';
+  IDLE_NOTIFICATION_BODY,
+  IDLE_NOTIFICATION_CHANNEL_ID,
+  IDLE_NOTIFICATION_TITLE,
+} from '@/shared/constants/notifications';
 
-export const INACTIVITY_MESSAGE =
-  'Tienes ganas de fumar? Abre la app antes de encenderlo.';
+import { computeIdleSchedule } from './reminderSchedule';
+
+export interface IdleScheduleResult {
+  scheduled: boolean;
+  permissionGranted: boolean;
+  error: Error | null;
+}
+
+let schedulingQueue: Promise<unknown> = Promise.resolve();
+
+function enqueue<T>(task: () => Promise<T>): Promise<T> {
+  const run = schedulingQueue.then(task, task);
+  schedulingQueue = run.then(
+    () => undefined,
+    () => undefined,
+  );
+  return run;
+}
+
+function toError(caught: unknown): Error {
+  return caught instanceof Error
+    ? caught
+    : new Error('No se pudo programar el recordatorio.');
+}
+
+async function cancelScheduled(): Promise<void> {
+  await Notifications.cancelAllScheduledNotificationsAsync();
+}
 
 export function configureNotificationHandler(): void {
   Notifications.setNotificationHandler({
@@ -30,65 +57,70 @@ export async function requestNotificationPermissions(): Promise<boolean> {
   return requested.granted;
 }
 
-export async function scheduleLocalNotification(
-  title: string,
-  body: string,
-  seconds: number,
-): Promise<string> {
-  return Notifications.scheduleNotificationAsync({
-    content: { title, body },
-    trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds },
+async function configureAndroidChannel(): Promise<void> {
+  if (Platform.OS !== 'android') {
+    return;
+  }
+  await Notifications.setNotificationChannelAsync(IDLE_NOTIFICATION_CHANNEL_ID, {
+    name: 'Recordatorios de inactividad',
+    importance: Notifications.AndroidImportance.HIGH,
+    vibrationPattern: [0, 250, 250, 250],
+    sound: 'default',
   });
 }
 
-export interface ScheduleRemindersResult {
-  scheduled: number;
-  permissionGranted: boolean;
-}
+export function scheduleIdleNotification(dailyCigarettes: number): Promise<IdleScheduleResult> {
+  return enqueue(async () => {
+    let permissionGranted = false;
 
-export async function scheduleInactivityReminders(
-  dailyCigarettes: number,
-  wakingHours = DEFAULT_WAKING_HOURS,
-): Promise<ScheduleRemindersResult> {
-  let permissionGranted = false;
+    try {
+      permissionGranted = await requestNotificationPermissions();
+      if (!permissionGranted) {
+        await cancelScheduled();
+        return { scheduled: false, permissionGranted: false, error: null };
+      }
 
-  try {
-    permissionGranted = await requestNotificationPermissions();
-    if (!permissionGranted) {
-      return { scheduled: 0, permissionGranted: false };
-    }
+      await configureAndroidChannel();
+      await cancelScheduled();
 
-    if (Platform.OS === 'android') {
-      await Notifications.setNotificationChannelAsync('inactivity', {
-        name: 'Recordatorios de pausa',
-        importance: Notifications.AndroidImportance.DEFAULT,
-      });
-    }
-
-    await Notifications.cancelAllScheduledNotificationsAsync();
-
-    const interval = calculateReminderIntervalMinutes(dailyCigarettes, wakingHours);
-    const dates = buildReminderDates(Date.now(), interval);
-
-    for (const date of dates) {
+      const schedule = computeIdleSchedule(Date.now(), dailyCigarettes);
       await Notifications.scheduleNotificationAsync({
         content: {
-          title: 'Pausa',
-          body: INACTIVITY_MESSAGE,
+          title: IDLE_NOTIFICATION_TITLE,
+          body: IDLE_NOTIFICATION_BODY,
         },
         trigger: {
           type: Notifications.SchedulableTriggerInputTypes.DATE,
-          date: new Date(date),
+          date: new Date(schedule.scheduledAtMs),
         },
       });
-    }
 
-    return { scheduled: dates.length, permissionGranted: true };
-  } catch {
-    return { scheduled: 0, permissionGranted };
-  }
+      return { scheduled: true, permissionGranted: true, error: null };
+    } catch (caught) {
+      try {
+        await cancelScheduled();
+      } catch {
+        // A failed cleanup must not mask the original scheduling error.
+      }
+      return {
+        scheduled: false,
+        permissionGranted,
+        error: toError(caught),
+      };
+    }
+  });
 }
 
-export async function cancelInactivityReminders(): Promise<void> {
-  await Notifications.cancelAllScheduledNotificationsAsync();
+export function cancelIdleNotification(): Promise<void> {
+  return enqueue(async () => {
+    await cancelScheduled();
+  });
+}
+
+export function resetIdleNotificationFromProfile(): Promise<IdleScheduleResult> {
+  const profile = getProfile();
+  if (profile === null) {
+    return Promise.resolve({ scheduled: false, permissionGranted: false, error: null });
+  }
+  return scheduleIdleNotification(profile.dailyCigarettes);
 }
