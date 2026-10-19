@@ -2,11 +2,11 @@ import { db } from '@/db/client';
 import { getTeamByInviteCode, findTeamMember } from '@/db/queries';
 import { teamMembers, teams, type Team, type TeamMember } from '@/db/schema';
 
+import { DEFAULT_TEAM_USER_NAME } from './constants';
 import { calculateDailyLimit, type DifficultyLevel } from './difficulty';
 import { generateLocalId } from './ids';
 import { generateInviteCode, normalizeInviteCode } from './inviteCodes';
-
-export const DEFAULT_TEAM_USER_NAME = 'Tú';
+import { mirrorTeamAndMember } from '../sync/teamMirror';
 
 export interface TeamFlowResult {
   team: Team | null;
@@ -67,6 +67,8 @@ export function createTeamWithLeader(input: CreateTeamInput): TeamFlowResult {
       transaction.insert(teamMembers).values(member).run();
     });
 
+    void mirrorTeamAndMember(team, member);
+
     return { team, member, alreadyMember: false, error: null };
   } catch (caught) {
     return {
@@ -102,6 +104,7 @@ export function joinTeamByInviteCode(input: JoinTeamInput): TeamFlowResult {
     const userName = input.userName?.trim() || DEFAULT_TEAM_USER_NAME;
     const existing = findTeamMember(team.id, userName);
     if (existing !== null) {
+      void mirrorTeamAndMember(team, existing);
       return {
         team,
         member: existing,
@@ -125,6 +128,7 @@ export function joinTeamByInviteCode(input: JoinTeamInput): TeamFlowResult {
     };
 
     db.insert(teamMembers).values(member).run();
+    void mirrorTeamAndMember(team, member);
 
     return { team, member, alreadyMember: false, error: null };
   } catch (caught) {

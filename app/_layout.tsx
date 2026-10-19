@@ -8,6 +8,7 @@ import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, Text, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { useTeamSync } from '@/modules/team/sync/useTeamSync';
 import { useDatabaseInitialized } from '@/shared/hooks/useDatabaseInitialized';
 import { useIdleNotifications } from '@/shared/hooks/useIdleNotifications';
 import { configureNotificationHandler } from '@/shared/utils/notifications';
@@ -16,6 +17,7 @@ import { shouldRedirectToOnboarding } from '@/shared/utils/routing';
 export default function RootLayout(): ReactElement {
   const { ready, hasProfile, error, refresh } = useDatabaseInitialized();
   useIdleNotifications(ready, hasProfile);
+  useTeamSync(ready);
   const router = useRouter();
   const pathname = usePathname();
   const segments = useSegments();

@@ -70,6 +70,18 @@ CREATE TABLE IF NOT EXISTS \`team_members\` (
   \`had_stumble\` integer DEFAULT 0 NOT NULL
 );
 CREATE INDEX IF NOT EXISTS \`idx_team_members_team_id\` ON \`team_members\` (\`team_id\`);
+CREATE TABLE IF NOT EXISTS \`team_event_outbox\` (
+  \`id\` text PRIMARY KEY NOT NULL,
+  \`team_id\` text NOT NULL,
+  \`user_name\` text NOT NULL,
+  \`event_type\` text NOT NULL,
+  \`timestamp\` text NOT NULL,
+  \`status\` text NOT NULL,
+  \`attempts\` integer DEFAULT 0 NOT NULL,
+  \`last_error\` text,
+  \`created_at\` text NOT NULL
+);
+CREATE INDEX IF NOT EXISTS \`idx_team_event_outbox_status\` ON \`team_event_outbox\` (\`status\`, \`created_at\`);
 `;
 
 function toError(caught: unknown): Error {

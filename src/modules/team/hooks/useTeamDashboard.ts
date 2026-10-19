@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { useFocusEffect } from 'expo-router';
 
@@ -16,9 +16,15 @@ import { DAY_MS, computeElapsedMs, resolveStreakStartMs } from '@/shared/utils/d
 
 import type { TeamLeaderboard } from '../utils/leaderboard';
 import { buildLeaderboard } from '../utils/leaderboard';
-import { DEFAULT_TEAM_USER_NAME } from '../utils/service';
+import { DEFAULT_TEAM_USER_NAME } from '../utils/constants';
 import type { TeamSummary } from '../utils/summary';
 import { buildTeamSummary } from '../utils/summary';
+import { mergeRemoteMembers } from '../sync/mergeRemoteEvents';
+import { flushTeamOutbox } from '../sync/teamSync';
+import type { TeamRealtimeStatus } from '../sync/useTeamRealtime';
+import { useTeamRealtime } from '../sync/useTeamRealtime';
+import type { TeamSyncStatus } from '../sync/syncStatus';
+import { useTeamSyncSnapshot } from '../sync/useTeamSync';
 
 interface TeamDashboardState {
   loading: boolean;
@@ -28,10 +34,18 @@ interface TeamDashboardState {
   summary: TeamSummary | null;
   leaderboard: TeamLeaderboard | null;
   currency: string;
+  packCost: number;
   error: Error | null;
 }
 
-export interface UseTeamDashboardResult extends TeamDashboardState {
+export interface UseTeamDashboardResult
+  extends Omit<TeamDashboardState, 'members' | 'summary' | 'leaderboard'> {
+  members: TeamMember[];
+  summary: TeamSummary | null;
+  leaderboard: TeamLeaderboard | null;
+  syncStatus: TeamSyncStatus;
+  pendingCount: number;
+  realtimeStatus: TeamRealtimeStatus;
   refresh: () => void;
 }
 
@@ -44,8 +58,12 @@ export function useTeamDashboard(): UseTeamDashboardResult {
     summary: null,
     leaderboard: null,
     currency: 'USD',
+    packCost: 0,
     error: null,
   });
+
+  const realtime = useTeamRealtime(state.team?.id ?? null);
+  const syncSnapshot = useTeamSyncSnapshot();
 
   const load = useCallback((): void => {
     try {
@@ -59,6 +77,7 @@ export function useTeamDashboard(): UseTeamDashboardResult {
           summary: null,
           leaderboard: null,
           currency: 'USD',
+          packCost: 0,
           error: null,
         });
         return;
@@ -74,6 +93,7 @@ export function useTeamDashboard(): UseTeamDashboardResult {
           summary: null,
           leaderboard: null,
           currency: profile.currency,
+          packCost: profile.packCost,
           error: null,
         });
         return;
@@ -112,6 +132,7 @@ export function useTeamDashboard(): UseTeamDashboardResult {
         summary: buildTeamSummary(team, members, profile.packCost, Date.now()),
         leaderboard: buildLeaderboard(members),
         currency: profile.currency,
+        packCost: profile.packCost,
         error: null,
       });
     } catch (caught) {
@@ -123,6 +144,7 @@ export function useTeamDashboard(): UseTeamDashboardResult {
         summary: null,
         leaderboard: null,
         currency: 'USD',
+        packCost: 0,
         error: caught instanceof Error ? caught : new Error('Error de base de datos'),
       });
     }
@@ -131,8 +153,44 @@ export function useTeamDashboard(): UseTeamDashboardResult {
   useFocusEffect(
     useCallback(() => {
       load();
+      void flushTeamOutbox();
     }, [load]),
   );
 
-  return { ...state, refresh: load };
+  const mergedMembers = useMemo(
+    () =>
+      state.team === null
+        ? []
+        : mergeRemoteMembers(
+            state.members,
+            realtime.events,
+            DEFAULT_TEAM_USER_NAME,
+            Date.now(),
+          ),
+    [state.members, state.team, realtime.events],
+  );
+
+  const summary = useMemo(
+    () =>
+      state.team === null
+        ? null
+        : buildTeamSummary(state.team, mergedMembers, state.packCost, Date.now()),
+    [state.team, mergedMembers, state.packCost],
+  );
+
+  const leaderboard = useMemo(
+    () => (state.team === null ? null : buildLeaderboard(mergedMembers)),
+    [state.team, mergedMembers],
+  );
+
+  return {
+    ...state,
+    members: mergedMembers,
+    summary,
+    leaderboard,
+    syncStatus: syncSnapshot.status,
+    pendingCount: syncSnapshot.pendingCount,
+    realtimeStatus: realtime.status,
+    refresh: load,
+  };
 }

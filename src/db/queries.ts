@@ -1,4 +1,4 @@
-import { and, between, count, desc, eq, max, sql } from 'drizzle-orm';
+import { and, asc, between, count, desc, eq, inArray, max, sql } from 'drizzle-orm';
 
 import { db } from './client';
 import {
@@ -7,6 +7,7 @@ import {
   smokingEvents,
   supplyInventory,
   smokeLogs,
+  teamEventOutbox,
   teamMembers,
   teams,
   userBadges,
@@ -16,6 +17,7 @@ import {
   type NewSmokingEvent,
   type SmokingEvent,
   type Team,
+  type TeamEventOutbox,
   type TeamMember,
   type NewPauseEvent,
   type NewUserProfile,
@@ -186,6 +188,61 @@ export function listTeamMembers(teamId: string): TeamMember[] {
     .where(eq(teamMembers.teamId, teamId))
     .orderBy(desc(teamMembers.joinedAt))
     .all();
+}
+
+export function enqueueTeamEvent(input: {
+  id: string;
+  teamId: string;
+  userName: string;
+  eventType: string;
+  timestamp: string;
+  createdAt: string;
+}): void {
+  db.insert(teamEventOutbox)
+    .values({
+      ...input,
+      status: 'pending',
+      attempts: 0,
+      lastError: null,
+    })
+    .run();
+}
+
+export function listPendingTeamEvents(limit = 20): TeamEventOutbox[] {
+  return db
+    .select()
+    .from(teamEventOutbox)
+    .where(inArray(teamEventOutbox.status, ['pending', 'failed']))
+    .orderBy(asc(teamEventOutbox.createdAt))
+    .limit(limit)
+    .all();
+}
+
+export function markTeamEventSent(id: string): void {
+  db.update(teamEventOutbox)
+    .set({ status: 'sent', lastError: null })
+    .where(eq(teamEventOutbox.id, id))
+    .run();
+}
+
+export function markTeamEventFailed(id: string, error: string): void {
+  db.update(teamEventOutbox)
+    .set({
+      status: 'failed',
+      attempts: sql`${teamEventOutbox.attempts} + 1`,
+      lastError: error,
+    })
+    .where(eq(teamEventOutbox.id, id))
+    .run();
+}
+
+export function countPendingTeamEvents(): number {
+  const rows = db
+    .select({ count: count() })
+    .from(teamEventOutbox)
+    .where(inArray(teamEventOutbox.status, ['pending', 'failed']))
+    .all();
+  return Number(rows[0]?.count ?? 0);
 }
 
 export function findTeamMember(teamId: string, userName: string): TeamMember | null {

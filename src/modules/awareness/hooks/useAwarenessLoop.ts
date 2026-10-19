@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 
 import { incrementPostponedCount } from '@/db/queries';
 import { AWARENESS_MESSAGES } from '@/shared/constants/messages';
+import { enqueueTeamSharedEvent } from '@/modules/team/sync/teamSync';
 import { SMOKING_TRIGGER_LABELS, type SmokingTrigger } from '@/shared/constants/smoking';
 import { resetIdleNotificationFromProfile } from '@/shared/utils/notifications';
 import { showAppToast } from '@/shared/utils/toast';
@@ -45,6 +46,7 @@ export function useAwarenessLoop(): UseAwarenessLoopResult {
     }
 
     void resetIdleNotificationFromProfile();
+    enqueueTeamSharedEvent('posponed');
     showAppToast({
       title: 'Pausa registrada',
       description: POSTPONE_POSITIVE_MESSAGE,

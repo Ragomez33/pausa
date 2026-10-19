@@ -91,6 +91,24 @@ export const teamMembers = sqliteTable(
   (table) => [index('idx_team_members_team_id').on(table.teamId)],
 );
 
+export const teamEventOutbox = sqliteTable(
+  'team_event_outbox',
+  {
+    id: text('id').primaryKey(),
+    teamId: text('team_id').notNull(),
+    userName: text('user_name').notNull(),
+    eventType: text('event_type').notNull(),
+    timestamp: text('timestamp').notNull(),
+    status: text('status').notNull(),
+    attempts: integer('attempts').notNull().default(0),
+    lastError: text('last_error'),
+    createdAt: text('created_at').notNull(),
+  },
+  (table) => [
+    index('idx_team_event_outbox_status').on(table.status, table.createdAt),
+  ],
+);
+
 export const userBadges = sqliteTable(
   'user_badges',
   {
@@ -131,3 +149,5 @@ export type Team = typeof teams.$inferSelect;
 export type NewTeam = typeof teams.$inferInsert;
 export type TeamMember = typeof teamMembers.$inferSelect;
 export type NewTeamMember = typeof teamMembers.$inferInsert;
+export type TeamEventOutbox = typeof teamEventOutbox.$inferSelect;
+export type NewTeamEventOutbox = typeof teamEventOutbox.$inferInsert;

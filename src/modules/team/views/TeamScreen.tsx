@@ -6,13 +6,25 @@ import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'rea
 import { formatMoney } from '@/shared/utils/utils';
 
 import { useTeamDashboard } from '../hooks/useTeamDashboard';
+import { REALTIME_STATUS_LABELS, SYNC_STATUS_LABELS } from '../utils/constants';
 import { getDifficultyLabel, type DifficultyLevel } from '../utils/difficulty';
 import { Leaderboard } from './Leaderboard';
 
 export function TeamScreen(): ReactElement {
   const router = useRouter();
-  const { loading, hasProfile, team, members, summary, leaderboard, currency, error } =
-    useTeamDashboard();
+  const {
+    loading,
+    hasProfile,
+    team,
+    members,
+    summary,
+    leaderboard,
+    currency,
+    syncStatus,
+    pendingCount,
+    realtimeStatus,
+    error,
+  } = useTeamDashboard();
 
   if (loading) {
     return (
@@ -82,6 +94,17 @@ export function TeamScreen(): ReactElement {
           </View>
         </View>
         <Text className="mt-3 text-xs text-slate-500">{members.length} integrantes</Text>
+      </View>
+
+      <View className="mt-4 rounded-xl bg-slate-800 px-4 py-3">
+        <Text className="text-sm font-semibold text-slate-200">
+          {SYNC_STATUS_LABELS[syncStatus] ?? syncStatus}
+        </Text>
+        <Text className="mt-1 text-xs text-slate-500">
+          {pendingCount > 0
+            ? `${pendingCount} evento(s) pendientes`
+            : REALTIME_STATUS_LABELS[realtimeStatus] ?? realtimeStatus}
+        </Text>
       </View>
 
       <View className="mt-4 flex-row gap-3">

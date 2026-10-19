@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { enqueueTeamSharedEvent } from '@/modules/team/sync/teamSync';
 import type { SmokingTrigger } from '@/shared/constants/smoking';
 import { resetIdleNotificationFromProfile } from '@/shared/utils/notifications';
 import { showAppToast } from '@/shared/utils/toast';
@@ -77,6 +78,7 @@ export function useSmokingSession(trigger: SmokingTrigger): UseSmokingSessionRes
     setPromptVisible(false);
     setFinishing(false);
     void resetIdleNotificationFromProfile();
+    enqueueTeamSharedEvent('smoked');
     showAppToast({
       title: 'Sesión registrada',
       description: result.inventoryDecremented

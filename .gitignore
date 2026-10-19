@@ -26,6 +26,7 @@ yarn-debug.*
 yarn-error.*
 
 # Local environment
+.env
 .env*.local
 
 # macOS
