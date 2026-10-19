@@ -1,7 +1,9 @@
 import {
   calculateSupplyDuration,
   formatDate,
+  formatDateTime,
   formatElapsedDuration,
+  formatMoney,
   formatTimeRemaining,
 } from '../../utils/utils';
 
@@ -24,6 +26,18 @@ describe('formatDate', () => {
   });
 });
 
+describe('formatDateTime', () => {
+  it('formats a valid ISO timestamp as a non-empty localized string', () => {
+    const result = formatDateTime('2026-10-19T10:30:00.000Z');
+    expect(typeof result).toBe('string');
+    expect(result.length).toBeGreaterThan(0);
+  });
+
+  it('returns the raw value for invalid timestamps', () => {
+    expect(formatDateTime('not-a-date')).toBe('not-a-date');
+  });
+});
+
 describe('calculateSupplyDuration', () => {
   it('computes days of supply from remaining cigarettes and daily target', () => {
     expect(calculateSupplyDuration(40, 10)).toBe(4);
@@ -31,6 +45,16 @@ describe('calculateSupplyDuration', () => {
 
   it('returns null when the daily target is not positive', () => {
     expect(calculateSupplyDuration(40, 0)).toBeNull();
+  });
+});
+
+describe('formatMoney', () => {
+  it('formats a valid currency', () => {
+    expect(formatMoney(5, 'USD')).toContain('5');
+  });
+
+  it('falls back to a readable string for invalid currency codes', () => {
+    expect(formatMoney(5, 'INVALID')).toContain('INVALID');
   });
 });
 

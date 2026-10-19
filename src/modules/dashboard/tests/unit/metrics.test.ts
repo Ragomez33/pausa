@@ -1,4 +1,4 @@
-import type { PauseEvent, UserProfile } from '@/db/schema';
+import type { InventoryLog, PauseEvent, UserProfile } from '@/db/schema';
 
 import {
   computeAvoidedCigarettes,
@@ -33,6 +33,21 @@ function event(id: number, resisted: boolean, offsetDays: number): PauseEvent {
     triggerEmotion: 'anxiety',
     resisted: resisted ? 1 : 0,
     notes: null,
+  };
+}
+
+function inventoryLog(
+  id: number,
+  actionType: 'purchase' | 'consumption',
+  quantity: number,
+  cost: number | null = null,
+): InventoryLog {
+  return {
+    id,
+    timestamp: new Date(PROFILE_START + id * 1_000).toISOString(),
+    actionType,
+    quantity,
+    cost,
   };
 }
 
@@ -160,6 +175,29 @@ describe('computeHomeMetrics', () => {
 
     expect(metrics.avoidedCigarettes).toBe(0);
     expect(metrics.moneySaved).toBe(0);
+  });
+
+  it('includes inventory spending from purchase costs only', () => {
+    const logs = [
+      inventoryLog(4, 'purchase', 20, 5.5),
+      inventoryLog(3, 'purchase', 20, null),
+      inventoryLog(2, 'consumption', 10),
+      inventoryLog(1, 'purchase', 20, 3),
+    ];
+    const metrics = computeHomeMetrics(profile(), [], PROFILE_START, logs);
+
+    expect(metrics.inventorySpending).toBeCloseTo(8.5);
+  });
+
+  it('reports zero inventory spending when no purchase cost is provided', () => {
+    const metrics = computeHomeMetrics(
+      profile(),
+      [],
+      PROFILE_START,
+      [inventoryLog(1, 'purchase', 20, null)],
+    );
+
+    expect(metrics.inventorySpending).toBe(0);
   });
 });
 

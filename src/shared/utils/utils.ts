@@ -9,6 +9,14 @@ export function formatDate(timestamp: number): string {
   return new Date(timestamp).toLocaleDateString();
 }
 
+export function formatDateTime(value: string): string {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+  return parsed.toLocaleString();
+}
+
 export function calculateSupplyDuration(
   remainingCigarettes: number,
   dailyTarget: number,
@@ -17,6 +25,18 @@ export function calculateSupplyDuration(
     return null;
   }
   return Math.floor(remainingCigarettes / dailyTarget);
+}
+
+export function formatMoney(amount: number, currency: string): string {
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: 'currency',
+      currency,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  } catch {
+    return `${amount.toFixed(2)} ${currency}`;
+  }
 }
 
 export function formatElapsedDuration(elapsedMs: number): string {

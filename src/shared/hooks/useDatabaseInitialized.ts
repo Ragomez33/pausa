@@ -25,6 +25,14 @@ CREATE TABLE IF NOT EXISTS \`pause_events\` (
   \`notes\` text
 );
 CREATE INDEX IF NOT EXISTS \`idx_pause_events_timestamp\` ON \`pause_events\` (\`timestamp\`);
+CREATE TABLE IF NOT EXISTS \`inventory_logs\` (
+  \`id\` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+  \`timestamp\` text NOT NULL,
+  \`action_type\` text NOT NULL,
+  \`quantity\` integer NOT NULL,
+  \`cost\` real
+);
+CREATE INDEX IF NOT EXISTS \`idx_inventory_logs_timestamp\` ON \`inventory_logs\` (\`timestamp\`);
 `;
 
 function toError(caught: unknown): Error {

@@ -59,6 +59,8 @@ export default function RootLayout(): ReactElement {
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="index" />
           <Stack.Screen name="pause" />
+          <Stack.Screen name="inventory" />
+          <Stack.Screen name="history" />
           <Stack.Screen name="onboarding" />
           <Stack.Screen name="team" />
         </Stack>

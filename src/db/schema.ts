@@ -34,6 +34,18 @@ export const supplyInventory = sqliteTable(
   (table) => [index('idx_supply_inventory_purchased_at').on(table.purchasedAt)],
 );
 
+export const inventoryLogs = sqliteTable(
+  'inventory_logs',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    timestamp: text('timestamp').notNull(),
+    actionType: text('action_type').notNull(),
+    quantity: integer('quantity').notNull(),
+    cost: real('cost'),
+  },
+  (table) => [index('idx_inventory_logs_timestamp').on(table.timestamp)],
+);
+
 export const pauseEvents = sqliteTable(
   'pause_events',
   {
@@ -54,3 +66,5 @@ export type SupplyInventoryItem = typeof supplyInventory.$inferSelect;
 export type NewSupplyInventoryItem = typeof supplyInventory.$inferInsert;
 export type PauseEvent = typeof pauseEvents.$inferSelect;
 export type NewPauseEvent = typeof pauseEvents.$inferInsert;
+export type InventoryLog = typeof inventoryLogs.$inferSelect;
+export type NewInventoryLog = typeof inventoryLogs.$inferInsert;

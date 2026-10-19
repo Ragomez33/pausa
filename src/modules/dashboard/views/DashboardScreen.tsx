@@ -2,13 +2,13 @@ import type { ReactElement } from 'react';
 import { useEffect, useState } from 'react';
 
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
-import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
-import { formatElapsedDuration } from '@/shared/utils/utils';
+import { formatElapsedDuration, formatMoney } from '@/shared/utils/utils';
 
 import { useHomeMetrics } from '../hooks/useHomeMetrics';
 import { getFeedbackMessage } from '../utils/feedback';
-import { formatCigarettes, formatMoney } from '../utils/metrics';
+import { formatCigarettes } from '../utils/metrics';
 
 export function DashboardScreen(): ReactElement {
   const router = useRouter();
@@ -48,8 +48,24 @@ export function DashboardScreen(): ReactElement {
   }
 
   return (
-    <View className="flex-1 bg-slate-900 px-6 pt-16">
-      <Text className="text-2xl font-bold text-slate-100">Tu progreso</Text>
+    <ScrollView contentContainerClassName="flex-grow bg-slate-900 px-6 pt-16 pb-10">
+      <View className="flex-row items-center justify-between gap-2">
+        <Text className="flex-1 text-2xl font-bold text-slate-100">Tu progreso</Text>
+        <View className="flex-row gap-2">
+          <TouchableOpacity
+            onPress={() => router.push('/history')}
+            className="rounded-full bg-slate-800 px-3 py-2"
+          >
+            <Text className="text-sm font-semibold text-emerald-400">Historial</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => router.push('/inventory')}
+            className="rounded-full bg-slate-800 px-3 py-2"
+          >
+            <Text className="text-sm font-semibold text-emerald-400">Inventario</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
 
       {banner !== null ? (
         <View className="mt-4 flex-row items-center rounded-xl bg-emerald-500/15 px-4 py-3">
@@ -95,6 +111,13 @@ export function DashboardScreen(): ReactElement {
         </View>
       </View>
 
+      <View className="mt-3 rounded-2xl bg-slate-800 p-4">
+        <Text className="text-xs uppercase text-slate-400">Gastado en inventario</Text>
+        <Text className="mt-1 text-2xl font-bold text-slate-100">
+          {formatMoney(metrics.inventorySpending, metrics.currency)}
+        </Text>
+      </View>
+
       <View className="flex-1 items-center justify-center">
         <TouchableOpacity
           onPress={() => router.push('/pause')}
@@ -103,6 +126,6 @@ export function DashboardScreen(): ReactElement {
           <Text className="text-3xl font-black text-slate-900">Pausa</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </ScrollView>
   );
 }

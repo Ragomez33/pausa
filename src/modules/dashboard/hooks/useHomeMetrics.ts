@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 
 import { useFocusEffect } from 'expo-router';
 
-import { getProfile, listPauseEvents } from '@/db/queries';
+import { getProfile, listInventoryLogs, listPauseEvents } from '@/db/queries';
 import type { HomeMetrics } from '@/shared/types/global';
 
 import { computeHomeMetrics } from '../utils/metrics';
@@ -40,10 +40,11 @@ export function useHomeMetrics(): UseHomeMetricsResult {
         return;
       }
       const events = listPauseEvents();
+      const inventoryLogs = listInventoryLogs();
       setState({
         loading: false,
         hasProfile: true,
-        metrics: computeHomeMetrics(profile, events, Date.now()),
+        metrics: computeHomeMetrics(profile, events, Date.now(), inventoryLogs),
         error: null,
       });
     } catch (caught) {

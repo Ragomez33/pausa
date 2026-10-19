@@ -2,6 +2,8 @@ export type UnixMillis = number;
 
 export type ActiveModal = 'NONE' | 'BUY_SUPPLY' | 'CONFIRM_SMOKE' | 'GOAL_SETTINGS';
 
+export type InventoryActionType = 'purchase' | 'consumption';
+
 export type TriggerEmotion =
   | 'anxiety'
   | 'stress'
@@ -33,6 +35,29 @@ export interface HomeMetrics {
   streakStart: string;
   avoidedCigarettes: number;
   moneySaved: number;
+  inventorySpending: number;
+  currency: string;
+}
+
+export interface PauseTotals {
+  total: number;
+  resisted: number;
+  ceded: number;
+}
+
+export interface TriggerCount {
+  triggerEmotion: string;
+  count: number;
+}
+
+export interface InventorySummary {
+  totalPurchased: number;
+  totalConsumed: number;
+  stock: number;
+  packs: number;
+  daysRemaining: number | null;
+  lowStock: boolean;
+  totalSpending: number;
   currency: string;
 }
 

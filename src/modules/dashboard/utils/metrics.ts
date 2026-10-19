@@ -1,6 +1,7 @@
-import type { PauseEvent, UserProfile } from '@/db/schema';
+import type { InventoryLog, PauseEvent, UserProfile } from '@/db/schema';
 import { CIGARETTES_PER_PACK } from '@/shared/constants/app';
 import type { HomeMetrics } from '@/shared/types/global';
+import { computeInventorySummary } from '@/shared/utils/inventory';
 
 export const DAY_MS = 86_400_000;
 
@@ -67,18 +68,6 @@ export function countCeded(events: PauseEvent[]): number {
   return events.filter((event) => event.resisted === 0).length;
 }
 
-export function formatMoney(amount: number, currency: string): string {
-  try {
-    return new Intl.NumberFormat(undefined, {
-      style: 'currency',
-      currency,
-      maximumFractionDigits: 2,
-    }).format(amount);
-  } catch {
-    return `${amount.toFixed(2)} ${currency}`;
-  }
-}
-
 export function formatCigarettes(amount: number): string {
   if (!Number.isFinite(amount) || amount <= 0) {
     return '0';
@@ -90,11 +79,17 @@ export function computeHomeMetrics(
   profile: UserProfile,
   events: PauseEvent[],
   nowMs: number,
+  inventoryLogs: InventoryLog[] = [],
 ): HomeMetrics {
   const streakStartMs = resolveStreakStart(profile, events);
   const elapsedMs = computeElapsedMs(streakStartMs, nowMs);
   const avoidedCigarettes = computeAvoidedCigarettes(profile.dailyCigarettes, elapsedMs);
   const moneySaved = computeMoneySaved(avoidedCigarettes, profile.packCost);
+  const inventorySpending = computeInventorySummary(
+    inventoryLogs,
+    profile.dailyCigarettes,
+    profile.currency,
+  ).totalSpending;
 
   return {
     resistedCount: countResisted(events),
@@ -103,6 +98,7 @@ export function computeHomeMetrics(
     streakStart: new Date(streakStartMs).toISOString(),
     avoidedCigarettes,
     moneySaved,
+    inventorySpending,
     currency: profile.currency,
   };
 }
