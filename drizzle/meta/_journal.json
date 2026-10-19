@@ -2,40 +2,11 @@
   "version": "7",
   "dialect": "sqlite",
   "entries": [
-    {
-      "idx": 0,
-      "version": "6",
-      "when": 1792346116371,
-      "tag": "0000_oval_red_hulk",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1792352548257,
-      "tag": "0001_high_hellcat",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1792400000000,
-      "tag": "0002_local_persistence_routing",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1792500000000,
-      "tag": "0003_inventory_logs",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "6",
-      "when": 1792600000000,
-      "tag": "0004_user_badges",
-      "breakpoints": true
-    }
+    { "idx": 0, "version": "6", "when": 1792346116371, "tag": "0000_oval_red_hulk", "breakpoints": true },
+    { "idx": 1, "version": "6", "when": 1792352548257, "tag": "0001_high_hellcat", "breakpoints": true },
+    { "idx": 2, "version": "6", "when": 1792400000000, "tag": "0002_local_persistence_routing", "breakpoints": true },
+    { "idx": 3, "version": "6", "when": 1792500000000, "tag": "0003_inventory_logs", "breakpoints": true },
+    { "idx": 4, "version": "6", "when": 1792600000000, "tag": "0004_user_badges", "breakpoints": true },
+    { "idx": 5, "version": "6", "when": 1792700000000, "tag": "0005_awareness_teams", "breakpoints": true }
   ]
 }

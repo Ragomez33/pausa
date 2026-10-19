@@ -7,6 +7,7 @@ export const userProfile = sqliteTable('user_profile', {
   currency: text('currency').notNull(),
   quitGoal: text('quit_goal').notNull(),
   createdAt: text('created_at').notNull(),
+  postponedCount: integer('postponed_count').notNull().default(0),
 });
 
 export const smokeLogs = sqliteTable(
@@ -46,6 +47,40 @@ export const inventoryLogs = sqliteTable(
   (table) => [index('idx_inventory_logs_timestamp').on(table.timestamp)],
 );
 
+export const smokingEvents = sqliteTable(
+  'smoking_events',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    timestamp: text('timestamp').notNull(),
+    triggerEmotion: text('trigger_emotion').notNull(),
+    durationSeconds: integer('duration_seconds').notNull(),
+    inventoryDecremented: integer('inventory_decremented').notNull(),
+  },
+  (table) => [index('idx_smoking_events_timestamp').on(table.timestamp)],
+);
+
+export const teams = sqliteTable('teams', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  name: text('name').notNull(),
+  goalLevel: text('goal_level').notNull(),
+  durationDays: integer('duration_days').notNull(),
+  createdAt: text('created_at').notNull(),
+});
+
+export const teamMembers = sqliteTable(
+  'team_members',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    teamId: integer('team_id')
+      .notNull()
+      .references(() => teams.id, { onDelete: 'cascade' }),
+    localName: text('local_name').notNull(),
+    dailyLimit: integer('daily_limit').notNull(),
+    status: text('status').notNull(),
+  },
+  (table) => [index('idx_team_members_team_id').on(table.teamId)],
+);
+
 export const userBadges = sqliteTable(
   'user_badges',
   {
@@ -80,3 +115,9 @@ export type InventoryLog = typeof inventoryLogs.$inferSelect;
 export type NewInventoryLog = typeof inventoryLogs.$inferInsert;
 export type UserBadge = typeof userBadges.$inferSelect;
 export type NewUserBadge = typeof userBadges.$inferInsert;
+export type SmokingEvent = typeof smokingEvents.$inferSelect;
+export type NewSmokingEvent = typeof smokingEvents.$inferInsert;
+export type Team = typeof teams.$inferSelect;
+export type NewTeam = typeof teams.$inferInsert;
+export type TeamMember = typeof teamMembers.$inferSelect;
+export type NewTeamMember = typeof teamMembers.$inferInsert;

@@ -2,8 +2,14 @@ import { useCallback, useState } from 'react';
 
 import { useFocusEffect } from 'expo-router';
 
-import { getProfile, listInventoryLogs, listPauseEvents } from '@/db/queries';
+import {
+  countSmokingEventsBetween,
+  getProfile,
+  listInventoryLogs,
+  listPauseEvents,
+} from '@/db/queries';
 import type { HomeMetrics } from '@/shared/types/global';
+import { getLocalDayRange } from '@/shared/utils/dayRange';
 
 import { computeHomeMetrics } from '../utils/metrics';
 
@@ -41,10 +47,13 @@ export function useHomeMetrics(): UseHomeMetricsResult {
       }
       const events = listPauseEvents();
       const inventoryLogs = listInventoryLogs();
+      const now = Date.now();
+      const dayRange = getLocalDayRange(now);
+      const smokedToday = countSmokingEventsBetween(dayRange.startIso, dayRange.endIso);
       setState({
         loading: false,
         hasProfile: true,
-        metrics: computeHomeMetrics(profile, events, Date.now(), inventoryLogs),
+        metrics: computeHomeMetrics(profile, events, now, inventoryLogs, smokedToday),
         error: null,
       });
     } catch (caught) {

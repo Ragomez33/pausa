@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 
-import { PauseScreen } from '@/modules/pause/views/PauseScreen';
+import { AwarenessLoopScreen } from '@/modules/awareness/views/AwarenessLoopScreen';
 
 export default function PauseRoute(): ReactElement {
-  return <PauseScreen />;
+  return <AwarenessLoopScreen />;
 }

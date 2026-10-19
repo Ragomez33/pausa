@@ -22,6 +22,7 @@ function profile(overrides: Partial<UserProfile> = {}): UserProfile {
     currency: 'USD',
     quitGoal: 'Salud',
     createdAt: '2026-10-01T00:00:00.000Z',
+    postponedCount: 0,
     ...overrides,
   };
 }
@@ -198,6 +199,25 @@ describe('computeHomeMetrics', () => {
     );
 
     expect(metrics.inventorySpending).toBe(0);
+  });
+
+  it('includes today smoked count and the profile daily limit', () => {
+    const metrics = computeHomeMetrics(
+      profile({ dailyCigarettes: 8 }),
+      [],
+      PROFILE_START,
+      [],
+      3,
+    );
+
+    expect(metrics.smokedToday).toBe(3);
+    expect(metrics.dailyLimit).toBe(8);
+  });
+
+  it('defaults today smoked count to zero', () => {
+    const metrics = computeHomeMetrics(profile(), [], PROFILE_START);
+
+    expect(metrics.smokedToday).toBe(0);
   });
 });
 

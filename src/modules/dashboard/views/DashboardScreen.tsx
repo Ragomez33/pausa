@@ -7,6 +7,7 @@ import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'rea
 import { formatElapsedDuration, formatMoney } from '@/shared/utils/utils';
 
 import { useBadgeEvaluation } from '@/modules/badges/hooks/useBadgeEvaluation';
+import { useInactivityReminders } from '@/shared/hooks/useInactivityReminders';
 
 import { useHomeMetrics } from '../hooks/useHomeMetrics';
 import { getFeedbackMessage } from '../utils/feedback';
@@ -19,6 +20,7 @@ export function DashboardScreen(): ReactElement {
   const [banner, setBanner] = useState<string | null>(null);
   const { loading, hasProfile, metrics, error } = useHomeMetrics();
   useBadgeEvaluation();
+  useInactivityReminders();
 
   useEffect(() => {
     const message = getFeedbackMessage(feedbackParam);
@@ -120,19 +122,30 @@ export function DashboardScreen(): ReactElement {
         </View>
       </View>
 
-      <View className="mt-3 rounded-2xl bg-slate-800 p-4">
-        <Text className="text-xs uppercase text-slate-400">Gastado en inventario</Text>
-        <Text className="mt-1 text-2xl font-bold text-slate-100">
-          {formatMoney(metrics.inventorySpending, metrics.currency)}
-        </Text>
+      <View className="mt-3 flex-row gap-3">
+        <View className="flex-1 rounded-2xl bg-slate-800 p-4">
+          <Text className="text-xs uppercase text-slate-400">Gastado en inventario</Text>
+          <Text className="mt-1 text-xl font-bold text-slate-100">
+            {formatMoney(metrics.inventorySpending, metrics.currency)}
+          </Text>
+        </View>
+        <View className="flex-1 rounded-2xl bg-slate-800 p-4">
+          <Text className="text-xs uppercase text-slate-400">Hoy</Text>
+          <Text className="mt-1 text-xl font-bold text-slate-100">
+            {metrics.smokedToday} / {metrics.dailyLimit > 0 ? metrics.dailyLimit : '—'}
+          </Text>
+        </View>
       </View>
 
       <View className="flex-1 items-center justify-center">
         <TouchableOpacity
           onPress={() => router.push('/pause')}
-          className="h-52 w-52 items-center justify-center rounded-full bg-emerald-500 active:bg-emerald-400"
+          className="h-52 w-52 items-center justify-center rounded-full bg-emerald-500 px-4 active:bg-emerald-400"
         >
-          <Text className="text-3xl font-black text-slate-900">Pausa</Text>
+          <Text className="text-center text-2xl font-black text-slate-900">Quiero fumar</Text>
+          <Text className="mt-1 text-center text-xs font-semibold text-slate-800">
+            Tengo ganas de fumar
+          </Text>
         </TouchableOpacity>
       </View>
     </ScrollView>

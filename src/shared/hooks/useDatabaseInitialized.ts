@@ -15,7 +15,8 @@ CREATE TABLE IF NOT EXISTS \`user_profile\` (
   \`pack_cost\` real NOT NULL,
   \`currency\` text NOT NULL,
   \`quit_goal\` text NOT NULL,
-  \`created_at\` text NOT NULL
+  \`created_at\` text NOT NULL,
+  \`postponed_count\` integer DEFAULT 0 NOT NULL
 );
 CREATE TABLE IF NOT EXISTS \`pause_events\` (
   \`id\` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -39,6 +40,29 @@ CREATE TABLE IF NOT EXISTS \`user_badges\` (
   \`unlocked_at\` text NOT NULL
 );
 CREATE UNIQUE INDEX IF NOT EXISTS \`idx_user_badges_badge_key\` ON \`user_badges\` (\`badge_key\`);
+CREATE TABLE IF NOT EXISTS \`smoking_events\` (
+  \`id\` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+  \`timestamp\` text NOT NULL,
+  \`trigger_emotion\` text NOT NULL,
+  \`duration_seconds\` integer NOT NULL,
+  \`inventory_decremented\` integer NOT NULL
+);
+CREATE INDEX IF NOT EXISTS \`idx_smoking_events_timestamp\` ON \`smoking_events\` (\`timestamp\`);
+CREATE TABLE IF NOT EXISTS \`teams\` (
+  \`id\` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+  \`name\` text NOT NULL,
+  \`goal_level\` text NOT NULL,
+  \`duration_days\` integer NOT NULL,
+  \`created_at\` text NOT NULL
+);
+CREATE TABLE IF NOT EXISTS \`team_members\` (
+  \`id\` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+  \`team_id\` integer NOT NULL,
+  \`local_name\` text NOT NULL,
+  \`daily_limit\` integer NOT NULL,
+  \`status\` text NOT NULL
+);
+CREATE INDEX IF NOT EXISTS \`idx_team_members_team_id\` ON \`team_members\` (\`team_id\`);
 `;
 
 function toError(caught: unknown): Error {

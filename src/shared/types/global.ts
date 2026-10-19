@@ -36,6 +36,8 @@ export interface HomeMetrics {
   avoidedCigarettes: number;
   moneySaved: number;
   inventorySpending: number;
+  smokedToday: number;
+  dailyLimit: number;
   currency: string;
 }
 

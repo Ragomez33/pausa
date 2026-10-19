@@ -50,6 +50,7 @@ export function computeHomeMetrics(
   events: PauseEvent[],
   nowMs: number,
   inventoryLogs: InventoryLog[] = [],
+  smokedToday = 0,
 ): HomeMetrics {
   const streakStartMs = resolveStreakStart(profile, events);
   const elapsedMs = computeElapsedMs(streakStartMs, nowMs);
@@ -69,6 +70,8 @@ export function computeHomeMetrics(
     avoidedCigarettes,
     moneySaved,
     inventorySpending,
+    smokedToday,
+    dailyLimit: profile.dailyCigarettes,
     currency: profile.currency,
   };
 }

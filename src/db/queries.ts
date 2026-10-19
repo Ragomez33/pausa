@@ -1,15 +1,24 @@
-import { count, desc, eq, max, sql } from 'drizzle-orm';
+import { between, count, desc, eq, max, sql } from 'drizzle-orm';
 
 import { db } from './client';
 import {
   inventoryLogs,
   pauseEvents,
+  smokingEvents,
   supplyInventory,
   smokeLogs,
+  teamMembers,
+  teams,
   userBadges,
   userProfile,
   type InventoryLog,
   type NewInventoryLog,
+  type NewSmokingEvent,
+  type NewTeam,
+  type NewTeamMember,
+  type SmokingEvent,
+  type Team,
+  type TeamMember,
   type NewPauseEvent,
   type NewUserProfile,
   type PauseEvent,
@@ -48,6 +57,14 @@ export function getProfile(): UserProfile | null {
 
 export function saveProfile(input: NewUserProfile): UserProfile {
   return db.insert(userProfile).values(input).returning().get();
+}
+
+export function incrementPostponedCount(): UserProfile {
+  return db
+    .update(userProfile)
+    .set({ postponedCount: sql`${userProfile.postponedCount} + 1` })
+    .returning()
+    .get();
 }
 
 export function listPauseEvents(): PauseEvent[] {
@@ -115,6 +132,48 @@ export function listInventoryLogs(): InventoryLog[] {
 
 export function createInventoryLog(input: NewInventoryLog): InventoryLog {
   return db.insert(inventoryLogs).values(input).returning().get();
+}
+
+export function createSmokingEvent(input: NewSmokingEvent): SmokingEvent {
+  return db.insert(smokingEvents).values(input).returning().get();
+}
+
+export function listSmokingEvents(): SmokingEvent[] {
+  return db
+    .select()
+    .from(smokingEvents)
+    .orderBy(desc(smokingEvents.timestamp), desc(smokingEvents.id))
+    .all();
+}
+
+export function countSmokingEventsBetween(startIso: string, endIso: string): number {
+  const rows = db
+    .select({ count: count() })
+    .from(smokingEvents)
+    .where(between(smokingEvents.timestamp, startIso, endIso))
+    .all();
+  return Number(rows[0]?.count ?? 0);
+}
+
+export function createTeam(input: NewTeam): Team {
+  return db.insert(teams).values(input).returning().get();
+}
+
+export function listTeams(): Team[] {
+  return db.select().from(teams).orderBy(desc(teams.createdAt)).all();
+}
+
+export function createTeamMember(input: NewTeamMember): TeamMember {
+  return db.insert(teamMembers).values(input).returning().get();
+}
+
+export function listTeamMembers(teamId: number): TeamMember[] {
+  return db
+    .select()
+    .from(teamMembers)
+    .where(eq(teamMembers.teamId, teamId))
+    .orderBy(desc(teamMembers.id))
+    .all();
 }
 
 export function listUserBadges(): UserBadge[] {

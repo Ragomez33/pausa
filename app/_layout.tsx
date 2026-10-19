@@ -62,6 +62,7 @@ export default function RootLayout(): ReactElement {
           <Stack.Screen name="inventory" />
           <Stack.Screen name="history" />
           <Stack.Screen name="badges" />
+          <Stack.Screen name="smoking-session" />
           <Stack.Screen name="onboarding" />
           <Stack.Screen name="team" />
         </Stack>
