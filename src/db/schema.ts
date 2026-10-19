@@ -59,24 +59,34 @@ export const smokingEvents = sqliteTable(
   (table) => [index('idx_smoking_events_timestamp').on(table.timestamp)],
 );
 
-export const teams = sqliteTable('teams', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  name: text('name').notNull(),
-  goalLevel: text('goal_level').notNull(),
-  durationDays: integer('duration_days').notNull(),
-  createdAt: text('created_at').notNull(),
-});
+export const teams = sqliteTable(
+  'teams',
+  {
+    id: text('id').primaryKey(),
+    name: text('name').notNull(),
+    inviteCode: text('invite_code').notNull(),
+    difficultyLevel: text('difficulty_level').notNull(),
+    durationDays: integer('duration_days').notNull(),
+    createdAt: text('created_at').notNull(),
+  },
+  (table) => [uniqueIndex('idx_teams_invite_code').on(table.inviteCode)],
+);
 
 export const teamMembers = sqliteTable(
   'team_members',
   {
-    id: integer('id').primaryKey({ autoIncrement: true }),
-    teamId: integer('team_id')
+    id: text('id').primaryKey(),
+    teamId: text('team_id')
       .notNull()
       .references(() => teams.id, { onDelete: 'cascade' }),
-    localName: text('local_name').notNull(),
+    userName: text('user_name').notNull(),
     dailyLimit: integer('daily_limit').notNull(),
-    status: text('status').notNull(),
+    role: text('role').notNull(),
+    joinedAt: text('joined_at').notNull(),
+    postponedCount: integer('postponed_count').notNull().default(0),
+    smokedToday: integer('smoked_today').notNull().default(0),
+    streakDays: integer('streak_days').notNull().default(0),
+    hadStumble: integer('had_stumble').notNull().default(0),
   },
   (table) => [index('idx_team_members_team_id').on(table.teamId)],
 );

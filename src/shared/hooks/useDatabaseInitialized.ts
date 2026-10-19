@@ -49,18 +49,25 @@ CREATE TABLE IF NOT EXISTS \`smoking_events\` (
 );
 CREATE INDEX IF NOT EXISTS \`idx_smoking_events_timestamp\` ON \`smoking_events\` (\`timestamp\`);
 CREATE TABLE IF NOT EXISTS \`teams\` (
-  \`id\` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+  \`id\` text PRIMARY KEY NOT NULL,
   \`name\` text NOT NULL,
-  \`goal_level\` text NOT NULL,
+  \`invite_code\` text NOT NULL,
+  \`difficulty_level\` text NOT NULL,
   \`duration_days\` integer NOT NULL,
   \`created_at\` text NOT NULL
 );
+CREATE UNIQUE INDEX IF NOT EXISTS \`idx_teams_invite_code\` ON \`teams\` (\`invite_code\`);
 CREATE TABLE IF NOT EXISTS \`team_members\` (
-  \`id\` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-  \`team_id\` integer NOT NULL,
-  \`local_name\` text NOT NULL,
+  \`id\` text PRIMARY KEY NOT NULL,
+  \`team_id\` text NOT NULL,
+  \`user_name\` text NOT NULL,
   \`daily_limit\` integer NOT NULL,
-  \`status\` text NOT NULL
+  \`role\` text NOT NULL,
+  \`joined_at\` text NOT NULL,
+  \`postponed_count\` integer DEFAULT 0 NOT NULL,
+  \`smoked_today\` integer DEFAULT 0 NOT NULL,
+  \`streak_days\` integer DEFAULT 0 NOT NULL,
+  \`had_stumble\` integer DEFAULT 0 NOT NULL
 );
 CREATE INDEX IF NOT EXISTS \`idx_team_members_team_id\` ON \`team_members\` (\`team_id\`);
 `;

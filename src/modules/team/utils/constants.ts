@@ -1,12 +1,17 @@
+import { DIFFICULTY_OPTIONS, type DifficultyLevel } from './difficulty';
+
+export const DURATION_OPTIONS = [7, 14, 30, 60] as const;
+
+export const DEFAULT_DURATION_DAYS = 14;
+
 export const TEAM_RANKS = [
-  { name: 'El Guardián', description: 'Mantiene la constancia del equipo día tras día.' },
-  { name: 'El Inquebrantable', description: 'Resiste los impulsos sin romper la racha.' },
-  { name: 'El Resiliente', description: 'Vuelve al camino después de cada tropiezo.' },
+  { name: 'El Guardián', description: 'Integrante con más cigarrillos pospuestos.' },
+  { name: 'El Inquebrantable', description: 'Mayor racha de días cumpliendo su límite.' },
+  { name: 'El Resiliente', description: 'Tuvo un tropiezo y sigue dentro de la meta.' },
 ] as const;
 
-export const GOAL_LEVEL_LABELS: Record<string, string> = {
-  facil: 'Fácil',
-  medio: 'Medio',
-  dificil: 'Difícil',
-  modo_dios: 'Modo Dios',
-};
+export const LEVEL_OPTIONS: { value: DifficultyLevel; label: string }[] =
+  DIFFICULTY_OPTIONS.map((option) => ({
+    value: option.value,
+    label: option.label,
+  }));

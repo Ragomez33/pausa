@@ -1,4 +1,4 @@
-import { between, count, desc, eq, max, sql } from 'drizzle-orm';
+import { and, between, count, desc, eq, max, sql } from 'drizzle-orm';
 
 import { db } from './client';
 import {
@@ -14,8 +14,6 @@ import {
   type InventoryLog,
   type NewInventoryLog,
   type NewSmokingEvent,
-  type NewTeam,
-  type NewTeamMember,
   type SmokingEvent,
   type Team,
   type TeamMember,
@@ -155,25 +153,69 @@ export function countSmokingEventsBetween(startIso: string, endIso: string): num
   return Number(rows[0]?.count ?? 0);
 }
 
-export function createTeam(input: NewTeam): Team {
-  return db.insert(teams).values(input).returning().get();
+export function getTeamByInviteCode(inviteCode: string): Team | null {
+  const rows = db
+    .select()
+    .from(teams)
+    .where(eq(teams.inviteCode, inviteCode))
+    .limit(1)
+    .all();
+  return rows[0] ?? null;
 }
 
-export function listTeams(): Team[] {
-  return db.select().from(teams).orderBy(desc(teams.createdAt)).all();
+export function getTeamById(teamId: string): Team | null {
+  const rows = db.select().from(teams).where(eq(teams.id, teamId)).limit(1).all();
+  return rows[0] ?? null;
 }
 
-export function createTeamMember(input: NewTeamMember): TeamMember {
-  return db.insert(teamMembers).values(input).returning().get();
+export function getActiveTeam(): Team | null {
+  const rows = db
+    .select({ teamId: teamMembers.teamId })
+    .from(teamMembers)
+    .orderBy(desc(teamMembers.joinedAt))
+    .limit(1)
+    .all();
+  const teamId = rows[0]?.teamId;
+  return teamId !== undefined ? getTeamById(teamId) : null;
 }
 
-export function listTeamMembers(teamId: number): TeamMember[] {
+export function listTeamMembers(teamId: string): TeamMember[] {
   return db
     .select()
     .from(teamMembers)
     .where(eq(teamMembers.teamId, teamId))
-    .orderBy(desc(teamMembers.id))
+    .orderBy(desc(teamMembers.joinedAt))
     .all();
+}
+
+export function findTeamMember(teamId: string, userName: string): TeamMember | null {
+  const rows = db
+    .select()
+    .from(teamMembers)
+    .where(and(eq(teamMembers.teamId, teamId), eq(teamMembers.userName, userName)))
+    .limit(1)
+    .all();
+  return rows[0] ?? null;
+}
+
+export function updateTeamMemberProgress(
+  memberId: string,
+  progress: {
+    postponedCount: number;
+    smokedToday: number;
+    streakDays: number;
+    hadStumble: boolean;
+  },
+): void {
+  db.update(teamMembers)
+    .set({
+      postponedCount: progress.postponedCount,
+      smokedToday: progress.smokedToday,
+      streakDays: progress.streakDays,
+      hadStumble: progress.hadStumble ? 1 : 0,
+    })
+    .where(eq(teamMembers.id, memberId))
+    .run();
 }
 
 export function listUserBadges(): UserBadge[] {

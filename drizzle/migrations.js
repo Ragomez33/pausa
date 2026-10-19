@@ -7,6 +7,7 @@ import m0002 from './0002_local_persistence_routing.sql';
 import m0003 from './0003_inventory_logs.sql';
 import m0004 from './0004_user_badges.sql';
 import m0005 from './0005_awareness_teams.sql';
+import m0006 from './0006_teams_challenges.sql';
 
 export default {
   journal,
@@ -17,5 +18,6 @@ export default {
     m0003,
     m0004,
     m0005,
+    m0006,
   },
 };
