@@ -1,5 +1,5 @@
 import { CIGARETTES_PER_PACK } from '@/shared/constants/app';
-import type { PauseEvent, UserProfile } from '@/shared/db/schema';
+import type { PauseEvent, UserProfile } from '@/db/schema';
 import type { HomeMetrics } from '@/shared/types/global';
 
 export function countResisted(events: PauseEvent[]): number {

@@ -48,7 +48,7 @@ export function listPauseEvents(): PauseEvent[] {
   return db
     .select()
     .from(pauseEvents)
-    .orderBy(desc(pauseEvents.createdAt))
+    .orderBy(desc(pauseEvents.timestamp))
     .all();
 }
 

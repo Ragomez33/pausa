@@ -29,8 +29,9 @@ export function OnboardingScreen(): ReactElement {
     setFormData((previous) => ({ ...previous, [key]: value }));
   }
 
-  function handleSubmit(): void {
-    if (submit(formData)) {
+  async function handleSubmit(): Promise<void> {
+    const saved = await submit(formData);
+    if (saved) {
       router.replace('/');
     }
   }
@@ -110,7 +111,9 @@ export function OnboardingScreen(): ReactElement {
         />
 
         <TouchableOpacity
-          onPress={handleSubmit}
+          onPress={() => {
+            void handleSubmit();
+          }}
           disabled={submitting}
           className="mt-10 items-center rounded-xl bg-emerald-500 py-4 active:bg-emerald-400"
         >

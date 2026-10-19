@@ -1,19 +1,12 @@
 import { index, integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
-import { DEFAULT_CURRENCY } from '../constants/app';
-
 export const userProfile = sqliteTable('user_profile', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  displayName: text('display_name'),
-  dailyTarget: integer('daily_target').notNull().default(0),
-  smokeIntervalMinutes: integer('smoke_interval_minutes').notNull().default(0),
-  packSize: integer('pack_size').notNull().default(20),
-  dailyCigarettes: integer('daily_cigarettes').notNull().default(0),
-  packCost: real('pack_cost').notNull().default(0),
-  currency: text('currency').notNull().default(DEFAULT_CURRENCY),
-  quitGoal: text('quit_goal'),
-  createdAt: integer('created_at').notNull(),
-  updatedAt: integer('updated_at').notNull(),
+  dailyCigarettes: integer('daily_cigarettes').notNull(),
+  packCost: real('pack_cost').notNull(),
+  currency: text('currency').notNull(),
+  quitGoal: text('quit_goal').notNull(),
+  createdAt: text('created_at').notNull(),
 });
 
 export const smokeLogs = sqliteTable(
@@ -45,12 +38,12 @@ export const pauseEvents = sqliteTable(
   'pause_events',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
-    createdAt: integer('created_at').notNull(),
+    timestamp: text('timestamp').notNull(),
     triggerEmotion: text('trigger_emotion').notNull(),
-    resisted: integer('resisted').notNull().default(1),
+    resisted: integer('resisted').notNull(),
     notes: text('notes'),
   },
-  (table) => [index('idx_pause_events_created_at').on(table.createdAt)],
+  (table) => [index('idx_pause_events_timestamp').on(table.timestamp)],
 );
 
 export type UserProfile = typeof userProfile.$inferSelect;

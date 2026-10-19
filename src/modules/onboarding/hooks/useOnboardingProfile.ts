@@ -1,6 +1,8 @@
 import { useCallback, useState } from 'react';
 
-import { saveProfile } from '@/shared/db/queries';
+import { db } from '@/db/client';
+import { getProfile } from '@/db/queries';
+import { userProfile } from '@/db/schema';
 import type { ProfileFormValues } from '@/shared/types/global';
 import { showAppToast } from '@/shared/utils/toast';
 
@@ -9,13 +11,13 @@ import { onboardingSchema } from '../utils/schema';
 
 export interface UseOnboardingProfileResult {
   submitting: boolean;
-  submit: (values: ProfileFormValues) => boolean;
+  submit: (values: ProfileFormValues) => Promise<boolean>;
 }
 
 export function useOnboardingProfile(): UseOnboardingProfileResult {
   const [submitting, setSubmitting] = useState(false);
 
-  const submit = useCallback((values: ProfileFormValues): boolean => {
+  const submit = useCallback(async (values: ProfileFormValues): Promise<boolean> => {
     const parsed = onboardingSchema.safeParse(values);
     if (!parsed.success) {
       showAppToast({
@@ -27,8 +29,12 @@ export function useOnboardingProfile(): UseOnboardingProfileResult {
     }
 
     setSubmitting(true);
+
     try {
-      saveProfile(buildProfileFromForm(parsed.data, Date.now()));
+      if (getProfile() !== null) {
+        setSubmitting(false);
+        return true;
+      }
     } catch {
       setSubmitting(false);
       showAppToast({
@@ -38,7 +44,22 @@ export function useOnboardingProfile(): UseOnboardingProfileResult {
       });
       return false;
     }
-    setSubmitting(false);
+
+    const payload = buildProfileFromForm(parsed.data, Date.now());
+
+    try {
+      db.insert(userProfile).values(payload).returning().get();
+    } catch {
+      showAppToast({
+        title: 'No se pudo guardar',
+        description: 'Inténtalo de nuevo.',
+        action: 'error',
+      });
+      return false;
+    } finally {
+      setSubmitting(false);
+    }
+
     return true;
   }, []);
 

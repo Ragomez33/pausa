@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 
 import { useFocusEffect } from 'expo-router';
 
-import { getProfile, listPauseEvents } from '@/shared/db/queries';
+import { getProfile, listPauseEvents } from '@/db/queries';
 import type { HomeMetrics } from '@/shared/types/global';
 
 import { computeHomeMetrics } from '../utils/metrics';

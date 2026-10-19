@@ -16,7 +16,7 @@ export const onboardingSchema: z.ZodType<ProfileFormValues> = z.object({
     .trim()
     .min(1, 'Indica el costo de la cajetilla')
     .refine(
-      (value) => !Number.isNaN(Number(value)) && Number(value) >= 0,
+      (value) => Number.isFinite(Number(value)) && Number(value) >= 0,
       'Debe ser un número mayor o igual a 0',
     ),
   currency: z.string().trim().min(1, 'Selecciona una moneda'),

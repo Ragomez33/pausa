@@ -11,7 +11,12 @@ export type TriggerEmotion =
 
 export interface DatabaseStatus {
   ready: boolean;
+  hasProfile: boolean;
   error: Error | null;
+}
+
+export interface DatabaseInitializedState extends DatabaseStatus {
+  refresh: () => void;
 }
 
 export interface ProfileFormValues {

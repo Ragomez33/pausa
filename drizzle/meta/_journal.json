@@ -15,6 +15,13 @@
       "when": 1792352548257,
       "tag": "0001_high_hellcat",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1792400000000,
+      "tag": "0002_local_persistence_routing",
+      "breakpoints": true
     }
   ]
 }

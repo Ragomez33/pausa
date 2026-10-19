@@ -8,7 +8,7 @@ describe('buildPauseEvent', () => {
       resisted: true,
     });
 
-    expect(result.createdAt).toBe(1000);
+    expect(result.timestamp).toBe(new Date(1000).toISOString());
     expect(result.triggerEmotion).toBe('anxiety');
     expect(result.resisted).toBe(1);
     expect(result.notes).toBeNull();

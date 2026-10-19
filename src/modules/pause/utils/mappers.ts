@@ -1,4 +1,4 @@
-import type { NewPauseEvent } from '@/shared/db/schema';
+import type { NewPauseEvent } from '@/db/schema';
 import type { TriggerEmotion } from '@/shared/types/global';
 
 export interface PauseEventInput {
@@ -10,7 +10,7 @@ export interface PauseEventInput {
 
 export function buildPauseEvent(input: PauseEventInput): NewPauseEvent {
   return {
-    createdAt: input.timestamp,
+    timestamp: new Date(input.timestamp).toISOString(),
     triggerEmotion: input.triggerEmotion,
     resisted: input.resisted ? 1 : 0,
     notes: input.notes ?? null,

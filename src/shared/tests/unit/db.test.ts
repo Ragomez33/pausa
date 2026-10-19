@@ -1,7 +1,7 @@
 import {
   buildSmokeLogFromAction,
   buildSupplyInventoryFromPurchase,
-} from '../../db/mappers';
+} from '../../../db/mappers';
 
 describe('buildSmokeLogFromAction', () => {
   it('maps a smoked action to a persisted smoke log', () => {

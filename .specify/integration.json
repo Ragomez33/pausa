@@ -1,12 +1,12 @@
 {
-  "version": "0.16.3.dev0",
+  "version": "1.1.1",
   "integration_state_schema": 1,
   "installed_integrations": [
     "opencode"
   ],
   "integration_settings": {
     "opencode": {
-      "script": "sh",
+      "script": "ps",
       "invoke_separator": "."
     }
   },

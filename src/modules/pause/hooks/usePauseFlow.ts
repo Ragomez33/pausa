@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { createPauseEvent } from '@/shared/db/queries';
+import { createPauseEvent } from '@/db/queries';
 import type { TriggerEmotion } from '@/shared/types/global';
 import { showAppToast } from '@/shared/utils/toast';
 

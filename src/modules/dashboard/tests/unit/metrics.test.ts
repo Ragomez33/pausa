@@ -1,4 +1,4 @@
-import type { PauseEvent, UserProfile } from '@/shared/db/schema';
+import type { PauseEvent, UserProfile } from '@/db/schema';
 
 import {
   calculateMoneySaved,
@@ -10,7 +10,7 @@ import {
 function event(id: number, resisted: boolean): PauseEvent {
   return {
     id,
-    createdAt: id,
+    timestamp: new Date(id).toISOString(),
     triggerEmotion: 'anxiety',
     resisted: resisted ? 1 : 0,
     notes: null,
@@ -20,16 +20,11 @@ function event(id: number, resisted: boolean): PauseEvent {
 function profile(packCost: number): UserProfile {
   return {
     id: 1,
-    displayName: null,
-    dailyTarget: 0,
-    smokeIntervalMinutes: 0,
-    packSize: 20,
     dailyCigarettes: 10,
     packCost,
     currency: 'USD',
-    quitGoal: null,
-    createdAt: 0,
-    updatedAt: 0,
+    quitGoal: 'Salud',
+    createdAt: new Date(0).toISOString(),
   };
 }
 
