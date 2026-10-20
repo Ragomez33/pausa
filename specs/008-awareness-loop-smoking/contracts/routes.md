@@ -34,13 +34,21 @@ The root `Stack` MUST register `smoking-session`.
 
 ## Smoking session contract
 
-- **R-SESSION-1**: Show a live ascending timer based on wall-clock time; do not block the UI thread.
-- **R-SESSION-2**: Every 300 seconds show "¿Terminaste?" with "Seguir" and "Terminé"; "Seguir" hides it until the next boundary.
-- **R-SESSION-3**: "Terminé" records one session with exact seconds, decrements inventory one when available, and updates today's count on Home.
+- **R-SESSION-1**: Show a live ascending timer based on wall-clock time rebuilt from the persisted `active_smoking_session.startedAtMs`; do not block the UI thread.
+- **R-SESSION-2**: Schedule up to twelve local notifications at 300-second boundaries with title "¿Terminaste?"; the in-app prompt is a foreground reinforcement only.
+- **R-SESSION-3**: "Terminé" records one session with exact seconds, decrements inventory one when available, clears the active row, cancels session notifications, and updates today's count on Home.
 - **R-SESSION-4**: Empty inventory → record session, keep stock 0, show a notice.
-- **R-SESSION-5**: Leaving before finish writes nothing.
+- **R-SESSION-5**: Leaving the screen before finish writes no event, clears the active row, and cancels pending session notifications.
 - **R-SESSION-6**: Rapid duplicate finish taps create one session.
 - **R-SESSION-7**: On success, replace to `/` with a positive confirmation.
+- **R-SESSION-8**: Tapping a session notification opens `/smoking-session` with the persisted session id and trigger.
+- **R-SESSION-9**: At 30+ minutes elapsed, offer "Sí, terminé" and "Descartar sesión"; discarding records nothing.
+- **R-SESSION-10**: Session notifications use the `smoking-session` Android channel and the `smoking-session:` identifier prefix.
+
+## Idle reminder isolation
+
+- **R-IDLE-SESSION-1**: Idle reminders MUST be suspended while `active_smoking_session` has a row.
+- **R-IDLE-SESSION-2**: Both notification families MUST cancel only their own identifiers; `cancelAllScheduledNotificationsAsync()` is forbidden.
 
 ## Team stub contract
 
@@ -51,3 +59,4 @@ The root `Stack` MUST register `smoking-session`.
 ## Deep-linking
 
 - Scheme `pausa://`; `/pause`, `/smoking-session`, and `/team` remain reachable and obey the profile guard.
+- Local session notifications deep-link to `/smoking-session?sessionId=<id>&trigger=<emotion>`; cold starts are handled through `getLastNotificationResponseAsync()`.

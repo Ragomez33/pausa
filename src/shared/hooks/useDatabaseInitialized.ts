@@ -48,6 +48,12 @@ CREATE TABLE IF NOT EXISTS \`smoking_events\` (
   \`inventory_decremented\` integer NOT NULL
 );
 CREATE INDEX IF NOT EXISTS \`idx_smoking_events_timestamp\` ON \`smoking_events\` (\`timestamp\`);
+CREATE TABLE IF NOT EXISTS \`active_smoking_session\` (
+  \`id\` text PRIMARY KEY NOT NULL,
+  \`trigger_emotion\` text NOT NULL,
+  \`started_at_ms\` integer NOT NULL,
+  \`created_at\` text NOT NULL
+);
 CREATE TABLE IF NOT EXISTS \`teams\` (
   \`id\` text PRIMARY KEY NOT NULL,
   \`name\` text NOT NULL,

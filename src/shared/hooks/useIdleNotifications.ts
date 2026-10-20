@@ -2,8 +2,11 @@ import { useCallback, useEffect, useRef } from 'react';
 
 import { AppState } from 'react-native';
 
-import { getProfile } from '@/db/queries';
-import { resetIdleNotificationFromProfile } from '@/shared/utils/notifications';
+import { getActiveSmokingSession, getProfile } from '@/db/queries';
+import {
+  cancelIdleNotification,
+  resetIdleNotificationFromProfile,
+} from '@/shared/utils/notifications';
 import { showAppToast } from '@/shared/utils/toast';
 
 export function useIdleNotifications(ready: boolean, hasProfile: boolean): void {
@@ -12,6 +15,11 @@ export function useIdleNotifications(ready: boolean, hasProfile: boolean): void 
   const reset = useCallback((): void => {
     const profile = getProfile();
     if (profile === null) {
+      return;
+    }
+
+    if (getActiveSmokingSession() !== null) {
+      void cancelIdleNotification();
       return;
     }
 

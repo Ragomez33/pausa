@@ -59,6 +59,13 @@ export const smokingEvents = sqliteTable(
   (table) => [index('idx_smoking_events_timestamp').on(table.timestamp)],
 );
 
+export const activeSmokingSession = sqliteTable('active_smoking_session', {
+  id: text('id').primaryKey(),
+  triggerEmotion: text('trigger_emotion').notNull(),
+  startedAtMs: integer('started_at_ms').notNull(),
+  createdAt: text('created_at').notNull(),
+});
+
 export const teams = sqliteTable(
   'teams',
   {
@@ -145,6 +152,8 @@ export type UserBadge = typeof userBadges.$inferSelect;
 export type NewUserBadge = typeof userBadges.$inferInsert;
 export type SmokingEvent = typeof smokingEvents.$inferSelect;
 export type NewSmokingEvent = typeof smokingEvents.$inferInsert;
+export type ActiveSmokingSession = typeof activeSmokingSession.$inferSelect;
+export type NewActiveSmokingSession = typeof activeSmokingSession.$inferInsert;
 export type Team = typeof teams.$inferSelect;
 export type NewTeam = typeof teams.$inferInsert;
 export type TeamMember = typeof teamMembers.$inferSelect;

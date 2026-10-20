@@ -22,6 +22,19 @@ All existing fields remain unchanged.
 
 **Index**: `idx_smoking_events_timestamp`.
 
+## Entity: active_smoking_session (new)
+
+Single-row table that persists the in-progress session so notifications can reopen it after the app is backgrounded or closed.
+
+| Column (TS / DB) | Type | Null | Notes |
+|------------------|------|------|-------|
+| `id` / `id` | text | no | PK; generated session id (`session-<ms>-<suffix>`) |
+| `triggerEmotion` / `trigger_emotion` | text | no | One of `anxiety_stress`, `boredom`, `habit`, `social_pressure` |
+| `startedAtMs` / `started_at_ms` | integer | no | Wall-clock start in milliseconds used to rebuild elapsed time |
+| `createdAt` / `created_at` | text ISO | no | Creation moment |
+
+A maximum of one row exists. Starting a session replaces any previous row; finishing or discarding removes it.
+
 ## Entity: teams (new)
 
 | Column (TS / DB) | Type | Null | Notes |
@@ -72,14 +85,25 @@ home → postpone_question
 ### Smoking session
 
 ```text
-session_started → timer_running
-  ├─ every 300s → prompt("¿Terminaste?")
+session_started → active_smoking_session row + 12 local notifications
+  ├─ every 300s → local notification("¿Terminaste?") (foreground modal reinforcement)
   │    ├─ Seguir → timer_running
-  │    └─ Terminé → recording → home
-  └─ leave before finish → home (nothing persisted)
-recording → event insert + optional inventory consumption (transaction) → home
+  │    └─ Terminé → recording → cancel notifications → home
+  ├─ notification tap → reopen /smoking-session for the persisted row
+  ├─ elapsed ≥ 30 min → offer finish or discard
+  └─ leave before finish → clear row + cancel notifications → home (nothing persisted)
+recording → event insert + active row delete + optional inventory consumption (transaction) → home
 ```
+
+## Notification identifiers
+
+| Prefix | Owner | Cancellation |
+|--------|-------|--------------|
+| `idle-reminder` | Idle reminder | Exact identifier only |
+| `smoking-session:<sessionId>:<minutes>` | Active session | Prefix `smoking-session:` only |
+
+Session scheduling and cancellation never call `cancelAllScheduledNotificationsAsync()`.
 
 ## Out of scope
 
-Full team CRUD/synchronization, leaderboard calculations, background timer persistence, editing/deleting smoking events, and remote notifications.
+Full team CRUD/synchronization, leaderboard calculations, remote notifications, and editing/deleting smoking events.

@@ -55,7 +55,7 @@ scheduling service is US1 because it delivers the reminder itself.
 
 ### Implementation for User Story 1
 
-- [X] T005 [US1] Rewrite `src/shared/utils/notifications.ts`: export `IDLE_NOTIFICATION_TITLE = 'Pausa consciente 🛑'`, `IDLE_NOTIFICATION_BODY = '¿Tienes ganas de fumar? Abre la app antes de encenderlo.'`, `scheduleIdleNotification(dailyCigarettes)`, `cancelIdleNotification()`, and `resetIdleNotificationFromProfile()`. Configure Android channel `idle-reminders` with `HIGH` importance, vibration `[0, 250, 250, 250]`, and `sound: 'default'`. Cancel pending before scheduling one DATE trigger; serialize calls through a module-level promise chain; return `{ scheduled, permissionGranted, error }` and never throw. Remove `scheduleInactivityReminders`.
+- [X] T005 [US1] Rewrite `src/shared/utils/notifications.ts`: export `IDLE_NOTIFICATION_TITLE = 'Pausa consciente 🛑'`, `IDLE_NOTIFICATION_BODY = '¿Tienes ganas de fumar? Abre la app antes de encenderlo.'`, `scheduleIdleNotification(dailyCigarettes)`, `cancelIdleNotification()`, and `resetIdleNotificationFromProfile()`. Configure Android channel `idle-reminders` with `HIGH` importance, vibration `[0, 250, 250, 250]`, and `sound: 'default'`. Cancel only the pending `idle-reminder` identifier before scheduling one DATE trigger; serialize calls through a module-level promise chain; return `{ scheduled, permissionGranted, error }` and never throw. Remove `scheduleInactivityReminders`.
 - [X] T006 [US1] Create `src/shared/hooks/useIdleNotifications.ts`: when `ready` and a profile exists, call `resetIdleNotificationFromProfile()`; expose no UI block; track whether a disabled notice has already been shown in the session.
 - [X] T007 [US1] Integrate `useIdleNotifications(ready)` into `app/_layout.tsx` after `useDatabaseInitialized`, keeping `configureNotificationHandler` and not delaying the loading indicator or stack.
 - [X] T008 [US1] Delete `src/shared/hooks/useInactivityReminders.ts` and remove its import/call from `src/modules/dashboard/views/DashboardScreen.tsx`; ensure no batch API remains in use.
@@ -108,6 +108,15 @@ scheduling service is US1 because it delivers the reminder itself.
 - [X] T019 Run `git status` for the repository root (`src/`, `app/`, `specs/009-idle-notifications/`), summarize changed files, and present the suggested commit command for user confirmation (constitution §5.9). Do NOT commit or push automatically.
 
 ---
+
+## Phase 7: Session Notification Isolation
+
+**Purpose**: Keep idle reminders and smoking-session prompts independent after the session-notification feature landed.
+
+- [X] T020 Refactor idle cancellation to use the `idle-reminder` identifier/prefix only; remove every `cancelAllScheduledNotificationsAsync()` call.
+- [X] T021 Suspend idle reminders while `active_smoking_session` has a row and resume them after the session finishes or is discarded.
+- [X] T022 Add the `smoking-session` high-importance Android channel and `smoking-session:<sessionId>:<minutes>` identifiers in `src/shared/utils/notifications.ts`.
+- [X] T023 Update `src/shared/tests/unit/notifications.test.ts` with session title/channel isolation and run lint, typecheck, and tests.
 
 ## Dependencies & Execution Order
 

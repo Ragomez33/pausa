@@ -25,13 +25,15 @@ End-to-end validation guide. See `data-model.md` and `contracts/` for formulas a
 5. Tap "Iniciar Cigarrillo".
    **Expected**: `/smoking-session` opens with the selected trigger.
 
-## 3. Session timer and prompt
+## 3. Session timer and local notifications
 
 1. Watch the session timer for a few seconds.
 2. **Expected**: elapsed time increases live and the UI remains responsive.
-3. Wait for five minutes.
-4. **Expected**: a prompt asks "¿Terminaste?"; choose "Seguir".
-5. **Expected**: the timer continues and the prompt returns after the next five-minute interval.
+3. Background the app or lock the screen and wait for five minutes.
+4. **Expected**: a local system notification titled "¿Terminaste?" arrives with the elapsed-minutes body.
+5. Bring the app to the foreground.
+6. **Expected**: the in-app "¿Terminaste?" prompt is also visible as a reinforcement and the timer reflects real elapsed time.
+7. Tap "Seguir fumando" and confirm the next notification arrives five minutes later (up to twelve prompts).
 
 ## 4. Finish session
 
@@ -51,16 +53,30 @@ End-to-end validation guide. See `data-model.md` and `contracts/` for formulas a
 ## 6. Abandoned session
 
 1. Start a session and leave the screen without finishing.
-2. **Expected**: no event and no inventory change.
+2. **Expected**: no event and no inventory change; the `active_smoking_session` row is cleared and pending session notifications are cancelled.
+
+## 6.1 Notification tap and stale session
+
+1. Start a session, background the app, and wait for a session notification.
+2. Tap the notification.
+   **Expected**: `/smoking-session` opens with the real elapsed time reconstructed from SQLite.
+3. Keep the session active for more than thirty minutes and reopen it.
+   **Expected**: the app offers "Sí, terminé" or "Descartar sesión"; discarding records no event.
+4. Kill the app while a session is active, then tap a pending session notification.
+   **Expected**: the app cold-starts, reads the persisted session, and opens `/smoking-session`.
 
 ## 7. Notifications
 
-1. With a profile and permission granted, trigger reminder scheduling from Home.
-2. **Expected**: interval matches `max(30, 16 × 60 / daily_cigarettes)` minutes, schedules stay within 08:00–22:00, and the message is exactly "Tienes ganas de fumar? Abre la app antes de encenderlo."
+1. With a profile and permission granted, trigger idle reminder scheduling from Home.
+2. **Expected**: interval matches `max(30, 16 × 60 / daily_cigarettes)` minutes, and the message is exactly "Tienes ganas de fumar? Abre la app antes de encenderlo."
 3. Reopen Home.
    **Expected**: no duplicate schedules.
 4. Deny permission and reopen.
    **Expected**: the app works and reminders are disabled with a clear explanation.
+5. Start a session while an idle reminder is pending.
+   **Expected**: the idle reminder is cancelled; only session notifications remain.
+6. Finish or discard the session.
+   **Expected**: pending `smoking-session:` notifications disappear and an idle reminder is scheduled again.
 
 ## 8. Teams stub
 
@@ -82,7 +98,9 @@ npm test
 - [ ] Home primary action and both loop branches work
 - [ ] Postponement increments once and writes no session
 - [ ] Four emotions, rotating bank message, and session start
-- [ ] Live timer and five-minute prompt
+- [ ] Live timer and five-minute local notification
+- [ ] Notification tap reopens the active session from SQLite
+- [ ] 30-minute stale session offers finish or discard
 - [ ] Session records exact duration, inventory decrement, today's count
 - [ ] Empty inventory and abandoned session edge cases behave
 - [ ] Reminder interval/message/waking-window/dedupe/permission behavior

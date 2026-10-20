@@ -2,18 +2,42 @@ import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 
 import { getProfile } from '@/db/queries';
+import type { SmokingTrigger } from '@/shared/constants/smoking';
 import {
   IDLE_NOTIFICATION_BODY,
   IDLE_NOTIFICATION_CHANNEL_ID,
+  IDLE_NOTIFICATION_ID,
   IDLE_NOTIFICATION_TITLE,
+  SESSION_NOTIFICATION_CHANNEL_ID,
+  SESSION_NOTIFICATION_TITLE,
 } from '@/shared/constants/notifications';
 
 import { computeIdleSchedule } from './reminderSchedule';
+import {
+  SESSION_NOTIFICATION_ID_PREFIX,
+  buildSessionPromptBody,
+  buildSmokingSessionNotificationData,
+  computeSessionPrompts,
+} from './sessionPromptSchedule';
 
 export interface IdleScheduleResult {
   scheduled: boolean;
   permissionGranted: boolean;
   error: Error | null;
+}
+
+export interface SessionPromptScheduleResult {
+  scheduled: boolean;
+  permissionGranted: boolean;
+  scheduledCount: number;
+  error: Error | null;
+}
+
+export interface SessionPromptScheduleInput {
+  sessionId: string;
+  startedAtMs: number;
+  triggerEmotion: SmokingTrigger;
+  nowMs?: number;
 }
 
 let schedulingQueue: Promise<unknown> = Promise.resolve();
@@ -33,8 +57,25 @@ function toError(caught: unknown): Error {
     : new Error('No se pudo programar el recordatorio.');
 }
 
-async function cancelScheduled(): Promise<void> {
-  await Notifications.cancelAllScheduledNotificationsAsync();
+async function cancelNotificationsByPrefix(prefix: string): Promise<void> {
+  const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+  const matching = scheduled.filter((request) =>
+    request.identifier.startsWith(prefix),
+  );
+
+  await Promise.all(
+    matching.map((request) =>
+      Notifications.cancelScheduledNotificationAsync(request.identifier),
+    ),
+  );
+}
+
+async function cancelIdleNotificationInternal(): Promise<void> {
+  await cancelNotificationsByPrefix(`${IDLE_NOTIFICATION_ID}`);
+}
+
+async function cancelSessionNotificationsInternal(): Promise<void> {
+  await cancelNotificationsByPrefix(SESSION_NOTIFICATION_ID_PREFIX);
 }
 
 export function configureNotificationHandler(): void {
@@ -57,12 +98,20 @@ export async function requestNotificationPermissions(): Promise<boolean> {
   return requested.granted;
 }
 
-async function configureAndroidChannel(): Promise<void> {
+async function configureAndroidChannels(): Promise<void> {
   if (Platform.OS !== 'android') {
     return;
   }
+
   await Notifications.setNotificationChannelAsync(IDLE_NOTIFICATION_CHANNEL_ID, {
     name: 'Recordatorios de inactividad',
+    importance: Notifications.AndroidImportance.HIGH,
+    vibrationPattern: [0, 250, 250, 250],
+    sound: 'default',
+  });
+
+  await Notifications.setNotificationChannelAsync(SESSION_NOTIFICATION_CHANNEL_ID, {
+    name: 'Sesiones de fumado',
     importance: Notifications.AndroidImportance.HIGH,
     vibrationPattern: [0, 250, 250, 250],
     sound: 'default',
@@ -76,15 +125,16 @@ export function scheduleIdleNotification(dailyCigarettes: number): Promise<IdleS
     try {
       permissionGranted = await requestNotificationPermissions();
       if (!permissionGranted) {
-        await cancelScheduled();
+        await cancelIdleNotificationInternal();
         return { scheduled: false, permissionGranted: false, error: null };
       }
 
-      await configureAndroidChannel();
-      await cancelScheduled();
+      await configureAndroidChannels();
+      await cancelIdleNotificationInternal();
 
       const schedule = computeIdleSchedule(Date.now(), dailyCigarettes);
       await Notifications.scheduleNotificationAsync({
+        identifier: IDLE_NOTIFICATION_ID,
         content: {
           title: IDLE_NOTIFICATION_TITLE,
           body: IDLE_NOTIFICATION_BODY,
@@ -92,13 +142,14 @@ export function scheduleIdleNotification(dailyCigarettes: number): Promise<IdleS
         trigger: {
           type: Notifications.SchedulableTriggerInputTypes.DATE,
           date: new Date(schedule.scheduledAtMs),
+          channelId: IDLE_NOTIFICATION_CHANNEL_ID,
         },
       });
 
       return { scheduled: true, permissionGranted: true, error: null };
     } catch (caught) {
       try {
-        await cancelScheduled();
+        await cancelIdleNotificationInternal();
       } catch {
         // A failed cleanup must not mask the original scheduling error.
       }
@@ -113,7 +164,7 @@ export function scheduleIdleNotification(dailyCigarettes: number): Promise<IdleS
 
 export function cancelIdleNotification(): Promise<void> {
   return enqueue(async () => {
-    await cancelScheduled();
+    await cancelIdleNotificationInternal();
   });
 }
 
@@ -123,4 +174,77 @@ export function resetIdleNotificationFromProfile(): Promise<IdleScheduleResult> 
     return Promise.resolve({ scheduled: false, permissionGranted: false, error: null });
   }
   return scheduleIdleNotification(profile.dailyCigarettes);
+}
+
+export function scheduleSessionPrompts(
+  input: SessionPromptScheduleInput,
+): Promise<SessionPromptScheduleResult> {
+  return enqueue(async () => {
+    let permissionGranted = false;
+
+    try {
+      permissionGranted = await requestNotificationPermissions();
+      if (!permissionGranted) {
+        await cancelSessionNotificationsInternal();
+        return {
+          scheduled: false,
+          permissionGranted: false,
+          scheduledCount: 0,
+          error: null,
+        };
+      }
+
+      await configureAndroidChannels();
+      await cancelSessionNotificationsInternal();
+
+      const nowMs = input.nowMs ?? Date.now();
+      const prompts = computeSessionPrompts(input.sessionId, input.startedAtMs, nowMs);
+      const data = buildSmokingSessionNotificationData({
+        sessionId: input.sessionId,
+        startedAtMs: input.startedAtMs,
+        triggerEmotion: input.triggerEmotion,
+      });
+
+      for (const prompt of prompts) {
+        await Notifications.scheduleNotificationAsync({
+          identifier: prompt.identifier,
+          content: {
+            title: SESSION_NOTIFICATION_TITLE,
+            body: buildSessionPromptBody(prompt.minutes),
+            data,
+          },
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.DATE,
+            date: new Date(prompt.scheduledAtMs),
+            channelId: SESSION_NOTIFICATION_CHANNEL_ID,
+          },
+        });
+      }
+
+      return {
+        scheduled: prompts.length > 0,
+        permissionGranted: true,
+        scheduledCount: prompts.length,
+        error: null,
+      };
+    } catch (caught) {
+      try {
+        await cancelSessionNotificationsInternal();
+      } catch {
+        // A failed cleanup must not mask the original scheduling error.
+      }
+      return {
+        scheduled: false,
+        permissionGranted,
+        scheduledCount: 0,
+        error: toError(caught),
+      };
+    }
+  });
+}
+
+export function cancelSessionPrompts(): Promise<void> {
+  return enqueue(async () => {
+    await cancelSessionNotificationsInternal();
+  });
 }

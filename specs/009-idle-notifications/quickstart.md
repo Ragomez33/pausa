@@ -39,7 +39,11 @@ End-to-end validation guide. See `data-model.md` and `contracts/` for formulas a
    **Expected**: the timer resets the same way.
 3. Complete a smoking session.
    **Expected**: the timer resets the same way.
-4. Trigger several resets quickly.
+4. Start a smoking session while an idle reminder is pending.
+   **Expected**: the idle reminder is cancelled and no new idle reminders are scheduled while the session is active; pending `smoking-session:` prompts are unaffected.
+5. Finish or discard the session.
+   **Expected**: session notifications are cancelled and exactly one idle reminder is scheduled again.
+6. Trigger several resets quickly.
    **Expected**: at most one pending reminder remains.
 
 ## 5. Permission denied
@@ -75,7 +79,9 @@ npm test
 - [ ] High-importance Android channel with vibration/sound
 - [ ] Interval formula and 30–240 clamp correct
 - [ ] Exactly one pending reminder with the exact title/body
-- [ ] Resets on app open/foreground/background, postponement, and session completion
+- [ ] Resets on app open/foreground/background, postponement, and session completion/discard
+- [ ] Idle reminders suspended during an active smoking session
+- [ ] Idle and session notifications cancelled only by their own identifiers/prefixes
 - [ ] At most one pending reminder after rapid resets
 - [ ] Denied/unavailable permission handled without blocking
 - [ ] No profile → no schedule; zero average → maximum interval

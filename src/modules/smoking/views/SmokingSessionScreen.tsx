@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { useEffect } from 'react';
 
 import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { Modal, Text, TouchableOpacity, View } from 'react-native';
@@ -10,10 +11,25 @@ import { formatDuration } from '../utils/session';
 
 export function SmokingSessionScreen(): ReactElement {
   const router = useRouter();
-  const params = useLocalSearchParams<{ trigger?: string }>();
+  const params = useLocalSearchParams<{ trigger?: string; sessionId?: string }>();
   const trigger = isSmokingTrigger(params.trigger) ? params.trigger : 'habit';
-  const { elapsedSeconds, promptVisible, finishing, continueSession, finishSession } =
-    useSmokingSession(trigger);
+  const sessionId = typeof params.sessionId === 'string' ? params.sessionId : undefined;
+  const {
+    trigger: sessionTrigger,
+    elapsedSeconds,
+    activeModal,
+    finishing,
+    missingSession,
+    continueSession,
+    finishSession,
+    discardSession,
+  } = useSmokingSession(trigger, sessionId);
+
+  useEffect(() => {
+    if (missingSession) {
+      router.replace('/' as Href);
+    }
+  }, [missingSession, router]);
 
   function handleFinish(): void {
     if (finishSession()) {
@@ -21,11 +37,19 @@ export function SmokingSessionScreen(): ReactElement {
     }
   }
 
+  function handleDiscard(): void {
+    if (discardSession()) {
+      router.replace('/' as Href);
+    }
+  }
+
+  const stalePrompt = activeModal === 'stalePrompt';
+
   return (
     <View className="flex-1 items-center justify-center bg-background px-6">
       <Text className="text-xs uppercase text-text-secondary">Sesión de fumado</Text>
       <Text className="mt-2 text-center text-lg font-semibold text-text-primary">
-        {SMOKING_TRIGGER_LABELS[trigger]}
+        {SMOKING_TRIGGER_LABELS[sessionTrigger]}
       </Text>
 
       <View className="mt-10 h-52 w-52 items-center justify-center rounded-full border-4 border-brand-amber/40 bg-brand-amber/10">
@@ -36,7 +60,7 @@ export function SmokingSessionScreen(): ReactElement {
       </View>
 
       <Text className="mt-8 text-center text-sm text-text-secondary">
-        El temporizador corre en primer plano. Cada cinco minutos te preguntaremos si terminaste.
+        Recibirás un aviso cada cinco minutos. Puedes seguir fumando o terminar cuando quieras.
       </Text>
 
       <TouchableOpacity
@@ -54,7 +78,7 @@ export function SmokingSessionScreen(): ReactElement {
       </TouchableOpacity>
 
       <Modal
-        visible={promptVisible}
+        visible={activeModal !== 'none'}
         transparent
         animationType="fade"
         onRequestClose={continueSession}
@@ -62,10 +86,12 @@ export function SmokingSessionScreen(): ReactElement {
         <View className="flex-1 items-center justify-center bg-black/70 px-6">
           <View className="w-full rounded-3xl border border-border-card bg-card p-6">
             <Text className="text-center text-2xl font-black text-text-primary">
-              ¿Terminaste?
+              {stalePrompt ? '¿Sigues fumando?' : '¿Terminaste?'}
             </Text>
             <Text className="mt-2 text-center text-sm text-text-secondary">
-              Han pasado cinco minutos de sesión.
+              {stalePrompt
+                ? 'Han pasado más de 30 minutos. Si olvidaste cerrar la sesión, puedes descartarla sin registrarla.'
+                : 'Han pasado cinco minutos de sesión.'}
             </Text>
 
             <TouchableOpacity
@@ -76,12 +102,22 @@ export function SmokingSessionScreen(): ReactElement {
               <Text className="font-bold text-white">Sí, terminé</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={continueSession}
-              className="mt-3 items-center rounded-xl border border-border-card py-4 active:bg-card/70"
-            >
-              <Text className="font-bold text-text-secondary">Seguir fumando</Text>
-            </TouchableOpacity>
+            {stalePrompt ? (
+              <TouchableOpacity
+                onPress={handleDiscard}
+                disabled={finishing}
+                className="mt-3 items-center rounded-xl border border-border-card py-4 active:bg-card/70"
+              >
+                <Text className="font-bold text-text-secondary">Descartar sesión</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                onPress={continueSession}
+                className="mt-3 items-center rounded-xl border border-border-card py-4 active:bg-card/70"
+              >
+                <Text className="font-bold text-text-secondary">Seguir fumando</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </Modal>

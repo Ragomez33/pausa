@@ -2,6 +2,7 @@ import { and, asc, between, count, desc, eq, inArray, max, sql } from 'drizzle-o
 
 import { db } from './client';
 import {
+  activeSmokingSession,
   inventoryLogs,
   pauseEvents,
   smokingEvents,
@@ -16,6 +17,8 @@ import {
   type NewInventoryLog,
   type NewSmokingEvent,
   type SmokingEvent,
+  type ActiveSmokingSession,
+  type NewActiveSmokingSession,
   type Team,
   type TeamEventOutbox,
   type TeamMember,
@@ -153,6 +156,40 @@ export function countSmokingEventsBetween(startIso: string, endIso: string): num
     .where(between(smokingEvents.timestamp, startIso, endIso))
     .all();
   return Number(rows[0]?.count ?? 0);
+}
+
+export function getActiveSmokingSession(): ActiveSmokingSession | null {
+  const rows = db
+    .select()
+    .from(activeSmokingSession)
+    .limit(1)
+    .all();
+  return rows[0] ?? null;
+}
+
+export function startActiveSmokingSession(
+  input: NewActiveSmokingSession,
+): ActiveSmokingSession {
+  db.transaction((transaction) => {
+    transaction.delete(activeSmokingSession).run();
+    transaction.insert(activeSmokingSession).values(input).run();
+  });
+
+  const created = getActiveSmokingSession();
+  if (created === null) {
+    throw new Error('No se pudo iniciar la sesión de fumado.');
+  }
+  return created;
+}
+
+export function clearActiveSmokingSession(sessionId?: string): void {
+  if (sessionId === undefined) {
+    db.delete(activeSmokingSession).run();
+    return;
+  }
+  db.delete(activeSmokingSession)
+    .where(eq(activeSmokingSession.id, sessionId))
+    .run();
 }
 
 export function getTeamByInviteCode(inviteCode: string): Team | null {

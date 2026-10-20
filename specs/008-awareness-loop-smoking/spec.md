@@ -33,21 +33,22 @@ When the urge to smoke appears, the person taps the primary home action "Quiero 
 
 ### User Story 2 - Track the Smoking Session and Finish (Priority: P2)
 
-During a smoking session, the person sees a live timer. Every five minutes the app asks "¿Terminaste?". When they confirm, the app subtracts one cigarette from inventory, records the session duration in seconds, and updates today's smoked-versus-limit counters.
+During a smoking session, the person sees a live timer. Every five minutes the app sends a local system notification asking "¿Terminaste?", even while the app is backgrounded. When they confirm, the app subtracts one cigarette from inventory, records the session duration in seconds, and updates today's smoked-versus-limit counters.
 
 **Why this priority**: The session timer turns an automatic habit into a measured event and feeds inventory, daily limits, and history.
 
-**Independent Test**: Start a session, let the timer run past five minutes to trigger the prompt, choose to continue, then finish; verify the elapsed duration, one-cigarette inventory decrease, and today's counter update. Start and abandon another session and verify nothing is recorded.
+**Independent Test**: Start a session, background the app, and verify local notifications arrive at five-minute intervals for up to one hour; tap one to reopen the active session, choose to continue, then finish; verify the elapsed duration, one-cigarette inventory decrease, and today's counter update. Start and abandon another session and verify nothing is recorded.
 
 **Acceptance Scenarios**:
 
-1. **Given** a session starts, **When** the session screen opens, **Then** a live elapsed timer is visible and continues while the app stays in the foreground.
-2. **Given** five minutes elapse, **When** the timer reaches the five-minute mark, **Then** a prompt asks "¿Terminaste?".
-3. **Given** the prompt, **When** the person chooses to continue, **Then** the timer keeps running and the prompt appears again after the next five-minute interval.
-4. **Given** the person taps "Terminé", **Then** the session duration is recorded in seconds, one cigarette is subtracted from inventory, and today's smoked counter increases by one.
-5. **Given** no inventory is available, **When** the session finishes, **Then** the session is still recorded, inventory never becomes negative, and a clear notice explains the stock situation.
-6. **Given** the person leaves before finishing, **Then** no session event is stored and inventory is unchanged.
-7. **Given** repeated "Terminé" taps, **Then** only one session is recorded.
+1. **Given** a session starts, **When** the session screen opens, **Then** a live elapsed timer is visible and notifications are scheduled every five minutes for up to twelve intervals.
+2. **Given** five minutes elapse, **When** the timer reaches the five-minute mark, **Then** a local notification asks "¿Terminaste?"; the in-app prompt is shown only as a foreground reinforcement.
+3. **Given** the notification, **When** the person taps it, **Then** the app opens the active session reconstructed from local storage with its real elapsed time.
+4. **Given** more than thirty minutes have elapsed since the session started, **When** the session opens, **Then** the person can finish it or discard it without recording an event.
+5. **Given** the person taps "Terminé", **Then** the session duration is recorded in seconds, one cigarette is subtracted from inventory, and today's smoked counter increases by one.
+6. **Given** no inventory is available, **When** the session finishes, **Then** the session is still recorded, inventory never becomes negative, and a clear notice explains the stock situation.
+7. **Given** the person leaves before finishing, **Then** no session event is stored, inventory is unchanged, and pending session notifications are cancelled.
+8. **Given** repeated "Terminé" taps, **Then** only one session is recorded.
 
 ---
 
@@ -94,8 +95,12 @@ The app stores the foundation for team challenges and shows a stub ranking view 
 - What happens when the person leaves the loop mid-way? Nothing is persisted unless the postpone branch was confirmed.
 - What happens when the inventory has zero cigarettes at session finish? The session is recorded, stock stays at zero, and a clear notice is shown.
 - What happens when the daily limit is zero or missing? Today's counter still increments, and the limit displays as unavailable rather than dividing by zero.
-- What happens when the app is backgrounded during a session? The timer uses wall-clock elapsed time when the screen resumes; no session is recorded unless the person confirms.
-- What happens when the session is abandoned or the app is closed? No event or inventory change is stored.
+- What happens when the app is backgrounded during a session? Wall-clock time is preserved and local notifications continue to fire every five minutes; the session is reconstructed from SQLite if the app is reopened.
+- What happens when the session is abandoned or the app is left? No event or inventory change is stored, the active-session row is cleared, and pending session notifications are cancelled.
+- What happens when a session notification is tapped? The app opens the active session with its real elapsed time from local storage.
+- What happens when a session exceeds thirty minutes? The app offers finishing it or discarding it without recording an event.
+- What happens when the app is closed while a session is active? The persisted active session survives and the scheduled notifications remain; tapping one reopens the session.
+- What happens when notification permission is denied for session prompts? The session remains usable, the foreground prompt still works, and a single explanatory notice is shown.
 - What happens when the reminder interval would be extremely short? It is clamped to a sensible minimum (for example 30 minutes) and remains within waking hours.
 - What happens when notifications are denied or unavailable? The app remains fully usable and informs the person.
 - What happens when the same reminder schedule is recalculated? Existing schedules are replaced or deduplicated rather than duplicated.
@@ -117,13 +122,13 @@ EARS-syntax requirements (per constitution section 4):
 - **FR-006** (Ubiquitous): The emotion selector shall offer Ansiedad/Estrés, Aburrimiento, Costumbre, and Presión Social.
 - **FR-007** (Event-driven): WHEN an emotion is selected, the system shall display a frank awareness message selected from a predefined rotating bank.
 - **FR-008** (Event-driven): WHEN the person taps "Iniciar Cigarrillo", the system shall open the smoking session.
-- **FR-009** (State-driven): WHILE the smoking session is active, the system shall display a live elapsed timer.
-- **FR-010** (Event-driven): WHEN each five-minute interval elapses during a session, the system shall ask "¿Terminaste?".
+- **FR-009** (State-driven): WHILE the smoking session is active, the system shall persist its identifier, trigger, and start moment locally and display a live elapsed timer reconstructed from that start moment.
+- **FR-010** (Event-driven): WHEN each five-minute interval elapses during a session, the system shall send a local notification asking "¿Terminaste?", including while the app is backgrounded, and shall show the in-app prompt only as a foreground reinforcement.
 - **FR-011** (Event-driven): WHEN the person confirms "Terminé", the system shall record the session with its trigger emotion and exact duration in seconds.
 - **FR-012** (Event-driven): WHEN a session is recorded, the system shall subtract one cigarette from available inventory.
 - **FR-013** (Event-driven): WHEN a session is recorded, the system shall increment today's smoked-cigarette counter and compare it with the profile's daily limit.
 - **FR-014** (Unwanted Behavior): IF inventory is empty, THEN the system shall keep stock at zero, still record the session, and show a clear notice.
-- **FR-015** (Unwanted Behavior): IF a session is abandoned before confirmation, THEN the system shall store no session and make no inventory change.
+- **FR-015** (Unwanted Behavior): IF a session is abandoned before confirmation, THEN the system shall store no session, make no inventory change, clear the active-session row, and cancel pending session notifications.
 - **FR-016** (Unwanted Behavior): IF "Terminé" is triggered repeatedly, THEN the system shall record at most one session.
 - **FR-017** (Event-driven): WHEN the profile and permission allow, the system shall schedule local inactivity reminders based on the daily cigarette average and waking window.
 - **FR-018** (Ubiquitous): The inactivity reminder message shall read "Tienes ganas de fumar? Abre la app antes de encenderlo."
@@ -139,6 +144,11 @@ EARS-syntax requirements (per constitution section 4):
 - **FR-028** (Ubiquitous): The system shall keep all loop, session, reminder, and team data on the device without network calls.
 - **FR-029** (Ubiquitous): The smoking-session timer shall run without blocking the app's interface.
 - **FR-030** (Ubiquitous): The user interface shall use utility-styled native components consistently.
+- **FR-031** (Ubiquitous): Each session shall schedule at most twelve five-minute local notifications and shall use a dedicated high-importance Android channel.
+- **FR-032** (Event-driven): WHEN a session notification is tapped, the system shall open `/smoking-session` for the persisted active session.
+- **FR-033** (State-driven): WHILE an active session is older than thirty minutes, the system shall offer finishing it or discarding it without recording an event.
+- **FR-034** (State-driven): WHILE a smoking session is active, the system shall suspend inactivity reminders.
+- **FR-035** (Event-driven): WHEN a session finishes or is discarded, the system shall cancel every pending session notification by identifier prefix without cancelling idle reminders.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -168,8 +178,8 @@ EARS-syntax requirements (per constitution section 4):
 - **SC-001**: 100% of completed postpone branches increment the postponement count by exactly one and create 0 smoking sessions.
 - **SC-002**: 100% of “No” branches present the four required emotions, a bank message, and the "Iniciar Cigarrillo" action in order.
 - **SC-003**: A person can complete the awareness loop and reach the session start in under 30 seconds.
-- **SC-004**: The smoking timer stays within 1 second of wall-clock elapsed time over a 5-minute session in the foreground.
-- **SC-005**: The "¿Terminaste?" prompt appears at each five-minute interval in 100% of tested sessions.
+- **SC-004**: The smoking timer stays within 1 second of wall-clock elapsed time after being reconstructed from the persisted start moment.
+- **SC-005**: A local "¿Terminaste?" notification is delivered at each five-minute interval (up to twelve) in 100% of tested sessions, including while the app is backgrounded.
 - **SC-006**: 100% of completed sessions record an exact duration, decrement inventory by one when available, and increment today's counter.
 - **SC-007**: 0 cases of negative inventory and 0 sessions recorded from abandoned flows.
 - **SC-008**: Reminder intervals match the profile-based calculation in 100% of tested configurations, with the exact required message and 0 duplicate schedules.
@@ -199,8 +209,9 @@ The constitution requires open product decisions to be stated before planning. T
 ## Assumptions
 
 - The app remains local-first; no network or team synchronization is implemented in this feature.
-- The smoking timer is ascending (elapsed time) and uses wall-clock time so it remains accurate if the app is briefly backgrounded; it updates only in the foreground.
-- A session is recorded only when the person confirms "Terminé"; leaving or closing the app discards the in-progress session.
+- The smoking timer is ascending (elapsed time) and uses wall-clock time from a start moment persisted in SQLite, so it remains accurate while the app is backgrounded or reopened.
+- A session is recorded only when the person confirms "Terminé"; leaving or closing the app keeps the persisted active session so its notifications can reopen it, while leaving the screen explicitly discards it.
+- Session notifications are local-only, capped at twelve intervals, and use their own identifier prefix so they never interfere with idle reminders.
 - The daily limit is the profile's daily cigarette average unless a team member limit overrides it later.
 - Today's counter is based on the device's local calendar day.
 - The emotion list is exactly Ansiedad/Estrés, Aburrimiento, Costumbre, and Presión Social.

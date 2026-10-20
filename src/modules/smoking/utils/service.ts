@@ -1,12 +1,15 @@
+import { eq } from 'drizzle-orm';
+
 import { db } from '@/db/client';
 import { getProfile, listInventoryLogs } from '@/db/queries';
-import { inventoryLogs, smokingEvents } from '@/db/schema';
+import { activeSmokingSession, inventoryLogs, smokingEvents } from '@/db/schema';
 import { computeInventorySummary } from '@/shared/utils/inventory';
 import type { SmokingTrigger } from '@/shared/constants/smoking';
 
 import { buildSmokingEvent } from './session';
 
 export interface CompleteSessionInput {
+  sessionId?: string;
   triggerEmotion: SmokingTrigger;
   durationSeconds: number;
   nowMs: number;
@@ -44,6 +47,14 @@ export function completeSmokingSession(
             cost: null,
           })
           .run();
+      }
+      if (input.sessionId !== undefined) {
+        transaction
+          .delete(activeSmokingSession)
+          .where(eq(activeSmokingSession.id, input.sessionId))
+          .run();
+      } else {
+        transaction.delete(activeSmokingSession).run();
       }
     });
 
