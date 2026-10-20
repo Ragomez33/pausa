@@ -37,14 +37,14 @@ During a smoking session, the person sees a live timer. Every five minutes the a
 
 **Why this priority**: The session timer turns an automatic habit into a measured event and feeds inventory, daily limits, and history.
 
-**Independent Test**: Start a session, background the app, and verify local notifications arrive at five-minute intervals for up to one hour; tap one to reopen the active session, choose to continue, then finish; verify the elapsed duration, one-cigarette inventory decrease, and today's counter update. Start and abandon another session and verify nothing is recorded.
+**Independent Test**: Start a session, background the app, and verify local notifications arrive at five-minute intervals for up to one hour; tap one to reopen the active session, choose to continue, then finish; verify the elapsed duration, one-cigarette inventory decrease, today's counter update, and that no in-app alert interrupts the timer. Start and abandon another session and verify nothing is recorded.
 
 **Acceptance Scenarios**:
 
-1. **Given** a session starts, **When** the session screen opens, **Then** a live elapsed timer is visible and notifications are scheduled every five minutes for up to twelve intervals.
-2. **Given** five minutes elapse, **When** the timer reaches the five-minute mark, **Then** a local notification asks "¿Terminaste?"; the in-app prompt is shown only as a foreground reinforcement.
+1. **Given** a session starts, **When** the session screen opens, **Then** a live elapsed timer is visible without any emergent in-app modal, and notifications are scheduled every five minutes for up to twelve intervals.
+2. **Given** five minutes elapse, **When** the timer reaches the five-minute mark, **Then** a local system notification asks "¿Terminaste?"; the app shows no popup or alert.
 3. **Given** the notification, **When** the person taps it, **Then** the app opens the active session reconstructed from local storage with its real elapsed time.
-4. **Given** more than thirty minutes have elapsed since the session started, **When** the session opens, **Then** the person can finish it or discard it without recording an event.
+4. **Given** more than thirty minutes have elapsed since the session started, **When** the session opens, **Then** the screen shows a non-blocking inline card to finish it or discard it without recording an event.
 5. **Given** the person taps "Terminé", **Then** the session duration is recorded in seconds, one cigarette is subtracted from inventory, and today's smoked counter increases by one.
 6. **Given** no inventory is available, **When** the session finishes, **Then** the session is still recorded, inventory never becomes negative, and a clear notice explains the stock situation.
 7. **Given** the person leaves before finishing, **Then** no session event is stored, inventory is unchanged, and pending session notifications are cancelled.
@@ -100,7 +100,7 @@ The app stores the foundation for team challenges and shows a stub ranking view 
 - What happens when a session notification is tapped? The app opens the active session with its real elapsed time from local storage.
 - What happens when a session exceeds thirty minutes? The app offers finishing it or discarding it without recording an event.
 - What happens when the app is closed while a session is active? The persisted active session survives and the scheduled notifications remain; tapping one reopens the session.
-- What happens when notification permission is denied for session prompts? The session remains usable, the foreground prompt still works, and a single explanatory notice is shown.
+- What happens when notification permission is denied for session prompts? The session remains usable without popups, and a single explanatory notice is shown.
 - What happens when the reminder interval would be extremely short? It is clamped to a sensible minimum (for example 30 minutes) and remains within waking hours.
 - What happens when notifications are denied or unavailable? The app remains fully usable and informs the person.
 - What happens when the same reminder schedule is recalculated? Existing schedules are replaced or deduplicated rather than duplicated.
@@ -123,7 +123,7 @@ EARS-syntax requirements (per constitution section 4):
 - **FR-007** (Event-driven): WHEN an emotion is selected, the system shall display a frank awareness message selected from a predefined rotating bank.
 - **FR-008** (Event-driven): WHEN the person taps "Iniciar Cigarrillo", the system shall open the smoking session.
 - **FR-009** (State-driven): WHILE the smoking session is active, the system shall persist its identifier, trigger, and start moment locally and display a live elapsed timer reconstructed from that start moment.
-- **FR-010** (Event-driven): WHEN each five-minute interval elapses during a session, the system shall send a local notification asking "¿Terminaste?", including while the app is backgrounded, and shall show the in-app prompt only as a foreground reinforcement.
+- **FR-010** (Event-driven): WHEN each five-minute interval elapses during a session, the system shall send a local notification asking "¿Terminaste?", including while the app is backgrounded or the screen is locked, and shall not show an emergent in-app prompt.
 - **FR-011** (Event-driven): WHEN the person confirms "Terminé", the system shall record the session with its trigger emotion and exact duration in seconds.
 - **FR-012** (Event-driven): WHEN a session is recorded, the system shall subtract one cigarette from available inventory.
 - **FR-013** (Event-driven): WHEN a session is recorded, the system shall increment today's smoked-cigarette counter and compare it with the profile's daily limit.
@@ -146,9 +146,12 @@ EARS-syntax requirements (per constitution section 4):
 - **FR-030** (Ubiquitous): The user interface shall use utility-styled native components consistently.
 - **FR-031** (Ubiquitous): Each session shall schedule at most twelve five-minute local notifications and shall use a dedicated high-importance Android channel.
 - **FR-032** (Event-driven): WHEN a session notification is tapped, the system shall open `/smoking-session` for the persisted active session.
-- **FR-033** (State-driven): WHILE an active session is older than thirty minutes, the system shall offer finishing it or discarding it without recording an event.
+- **FR-033** (State-driven): WHILE an active session is older than thirty minutes, the system shall show a non-blocking inline card offering finishing it or discarding it without recording an event.
 - **FR-034** (State-driven): WHILE a smoking session is active, the system shall suspend inactivity reminders.
 - **FR-035** (Event-driven): WHEN a session finishes or is discarded, the system shall cancel every pending session notification by identifier prefix without cancelling idle reminders.
+- **FR-036** (Ubiquitous): The active-session screen shall not render any modal, alert, or popup that interrupts the timer.
+- **FR-037** (Event-driven): WHEN a postponement is confirmed, the system shall insert one resisted pause event with the current timestamp and increment the postponement count atomically.
+- **FR-038** (Event-driven): WHEN an inventory consumption is confirmed, the system shall insert the consumption movement and one smoking event per cigarette in the same transaction.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -179,7 +182,7 @@ EARS-syntax requirements (per constitution section 4):
 - **SC-002**: 100% of “No” branches present the four required emotions, a bank message, and the "Iniciar Cigarrillo" action in order.
 - **SC-003**: A person can complete the awareness loop and reach the session start in under 30 seconds.
 - **SC-004**: The smoking timer stays within 1 second of wall-clock elapsed time after being reconstructed from the persisted start moment.
-- **SC-005**: A local "¿Terminaste?" notification is delivered at each five-minute interval (up to twelve) in 100% of tested sessions, including while the app is backgrounded.
+- **SC-005**: A local "¿Terminaste?" notification is delivered at each five-minute interval (up to twelve) in 100% of tested sessions, including while the app is backgrounded or the screen is locked, with 0 in-app popups.
 - **SC-006**: 100% of completed sessions record an exact duration, decrement inventory by one when available, and increment today's counter.
 - **SC-007**: 0 cases of negative inventory and 0 sessions recorded from abandoned flows.
 - **SC-008**: Reminder intervals match the profile-based calculation in 100% of tested configurations, with the exact required message and 0 duplicate schedules.

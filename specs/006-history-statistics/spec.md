@@ -12,7 +12,7 @@
 
 ### User Story 1 - Review Past Impulses (Priority: P1)
 
-A person opens the history screen and sees every recorded impulse from newest to oldest. Each entry shows when it happened, which emotion triggered it, whether the person resisted or gave in, and any note they added.
+A person opens the history screen and sees every recorded impulse and smoking session from newest to oldest. Each entry shows when it happened, which emotion triggered it, whether the person resisted, gave in, or smoked, and any note they added.
 
 **Why this priority**: The event history is the foundation of the feature and gives the person direct evidence of their behavior over time.
 
@@ -20,9 +20,9 @@ A person opens the history screen and sees every recorded impulse from newest to
 
 **Acceptance Scenarios**:
 
-1. **Given** stored pause events, **When** the history screen opens, **Then** events are shown newest first.
+1. **Given** stored pause and smoking events, **When** the history screen opens, **Then** events from both sources are shown newest first.
 2. **Given** an event with a trigger and a resisted outcome, **When** it renders, **Then** it shows the localized date/time, the trigger label, and a success status.
-3. **Given** an event with a ceded outcome, **When** it renders, **Then** it shows a clearly different ceded status.
+3. **Given** a smoking session record, **When** it renders, **Then** it shows a clearly different "Fumado" status and its trigger label.
 4. **Given** an event with notes, **When** it renders, **Then** the notes are shown; events without notes omit that area.
 5. **Given** no stored events, **When** the history screen opens, **Then** a clear empty state is shown instead of a blank or broken list.
 
@@ -84,13 +84,13 @@ The person sees which emotions trigger their impulses most often, with counts an
 
 EARS-syntax requirements (per constitution section 4):
 
-- **FR-001** (Ubiquitous): The system shall provide a history view of all recorded impulse events for the local user.
-- **FR-002** (Ubiquitous): The history view shall order events from most recent to oldest.
+- **FR-001** (Ubiquitous): The system shall provide a history view of all recorded pause events and completed smoking sessions for the local user.
+- **FR-002** (Ubiquitous): The history view shall order events from both sources from most recent to oldest.
 - **FR-003** (Ubiquitous): Each history entry shall show the event's localized date and time.
 - **FR-004** (Ubiquitous): Each history entry shall show a readable label for its trigger emotion.
-- **FR-005** (Ubiquitous): Each history entry shall show whether the impulse was resisted or ceded, using distinct visible states.
+- **FR-005** (Ubiquitous): Each history entry shall show whether the event was resisted, ceded, or a completed smoking session, using distinct visible states.
 - **FR-006** (Optional Feature): WHERE an event has non-empty notes, the history entry shall display them.
-- **FR-007** (Event-driven): WHEN the history screen opens or regains focus, the system shall reload the events and statistics.
+- **FR-007** (Event-driven): WHEN the history screen opens or regains focus, the system shall reload pause events, smoking events, and statistics.
 - **FR-008** (Ubiquitous): The system shall display the overall success rate as the percentage of resisted impulses among all impulses.
 - **FR-009** (State-driven): WHILE there are no impulses, the system shall show a neutral success-rate empty state instead of dividing by zero.
 - **FR-010** (Ubiquitous): The system shall display the active smoke-free streak in whole days and hours.
@@ -118,6 +118,11 @@ EARS-syntax requirements (per constitution section 4):
   - Trigger emotion (current or historical code)
   - Outcome: resisted or ceded
   - Optional notes
+- **Smoking Session**: A stored completed smoking event from `smoking_events`, including manual inventory consumption.
+  - Event timestamp (ISO date-time)
+  - Trigger emotion
+  - Duration in seconds (0 when the duration is unknown, e.g. manual consumption)
+  - No notes
 - **User Profile** (read-only): provides the initial streak start and the onboarding guard.
 - **History Summary** (derived, not stored):
   - Total impulses
@@ -147,9 +152,9 @@ EARS-syntax requirements (per constitution section 4):
 The constitution requires open product decisions to be stated before planning. The following points have recommended defaults and remain open for confirmation before `/speckit.plan`.
 
 1. **Scope of “consumo”**
-   - Context: The request title mentions “pausas y consumo”, but the detailed history requirements reference only pause events.
-   - Recommended default: This feature covers pause-event history and pause analytics only. Inventory consumption history remains in the inventory module and is not merged into this screen.
-   - Alternative: Add a second tab that also lists inventory consumption movements and combines both histories.
+   - Context: The original request title mentioned “pausas y consumo”, and device testing showed smoking sessions were invisible in History.
+   - Recommended default: Merge `pause_events` and `smoking_events` into one chronological history. Resisted pauses, legacy ceded pauses, and completed smoking sessions (including manual inventory consumption) all appear as entries.
+   - Alternative: Keep inventory consumption out of History and show only awareness-loop outcomes.
 
 2. **Active streak definition**
    - Context: “Racha actual activa de días/horas sin fumar” is not defined against stored events.
@@ -164,8 +169,8 @@ The constitution requires open product decisions to be stated before planning. T
 ## Assumptions
 
 - The app remains local-first; history and analytics never leave the device.
-- The history covers pause events only; inventory movements are out of scope unless the scope gate says otherwise.
-- The active streak uses the same definition as the Home progress view: profile creation or the most recent ceded pause event.
+- History covers both `pause_events` and completed `smoking_events`; inventory purchases remain out of scope.
+- The active streak uses the later of the most recent ceded pause event or the most recent smoking event.
 - Success rate is all-time and uses resisted ÷ total; a zero total shows a neutral state.
 - Trigger percentages are based on all impulses and may be rounded for display; bars are proportional to counts.
 - Historical trigger codes remain valid and are mapped to human-readable labels.

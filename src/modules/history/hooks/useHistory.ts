@@ -3,14 +3,11 @@ import { useCallback, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 
 import {
-  getLatestCededTimestamp,
-  getPauseTotals,
   getProfile,
   listInventoryLogs,
   listPauseEvents,
-  listTriggerCounts,
+  listSmokingEvents,
 } from '@/db/queries';
-import type { PauseEvent } from '@/db/schema';
 
 import {
   computeAvoidedCigarettes,
@@ -23,11 +20,18 @@ import {
   type HistorySummary,
   type PauseAnalytics,
 } from '../utils/analytics';
+import type { HistoryEvent } from '../utils/mappers';
+import {
+  countHistoryTotals,
+  countHistoryTriggers,
+  getLatestCededTimestampFromEvents,
+  mergeHistoryEvents,
+} from '../utils/mappers';
 
 interface HistoryState {
   loading: boolean;
   hasProfile: boolean;
-  events: PauseEvent[];
+  events: HistoryEvent[];
   analytics: PauseAnalytics | null;
   summary: HistorySummary | null;
   error: Error | null;
@@ -36,7 +40,7 @@ interface HistoryState {
 export interface UseHistoryResult {
   loading: boolean;
   hasProfile: boolean;
-  events: PauseEvent[];
+  events: HistoryEvent[];
   analytics: PauseAnalytics | null;
   summary: HistorySummary | null;
   error: Error | null;
@@ -68,10 +72,10 @@ export function useHistory(): UseHistoryResult {
         return;
       }
 
-      const events = listPauseEvents();
-      const totals = getPauseTotals();
-      const counts = listTriggerCounts();
-      const latestCeded = getLatestCededTimestamp();
+      const events = mergeHistoryEvents(listPauseEvents(), listSmokingEvents());
+      const totals = countHistoryTotals(events);
+      const counts = countHistoryTriggers(events);
+      const latestCeded = getLatestCededTimestampFromEvents(events);
       const analytics = computePauseAnalytics(
         totals,
         counts,

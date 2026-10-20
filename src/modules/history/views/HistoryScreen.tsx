@@ -75,7 +75,7 @@ export function HistoryScreen(): ReactElement {
       </View>
       <FlatList
         data={entries}
-        keyExtractor={(item) => String(item.id)}
+        keyExtractor={(item) => item.id}
         contentContainerClassName="px-6 pb-10"
         initialNumToRender={12}
         windowSize={7}
@@ -88,7 +88,9 @@ export function HistoryScreen(): ReactElement {
             </Text>
             <StatsSummary analytics={analytics} summary={summary} />
             <TriggerBreakdown triggers={analytics.triggers} />
-            <Text className="mt-6 text-xs uppercase text-text-secondary">Pausas registradas</Text>
+            <Text className="mt-6 text-xs uppercase text-text-secondary">
+              Pausas y fumados registrados
+            </Text>
           </View>
         }
         renderItem={({ item }) => <HistoryRow entry={item} />}

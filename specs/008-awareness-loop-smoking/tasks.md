@@ -88,8 +88,8 @@ helpers, and notifications service are foundational because multiple stories dep
 
 - [X] T020 [P] [US2] Create `src/modules/smoking/utils/session.ts` with `formatDuration(seconds)`, `nextPromptBoundary(elapsedSeconds)`, and `buildSmokingEvent({ timestamp, triggerEmotion, durationSeconds, inventoryDecremented })`.
 - [X] T021 [US2] Create `src/modules/smoking/utils/service.ts` with `completeSmokingSession({ triggerEmotion, durationSeconds, nowMs })`: compute stock from inventory logs, insert the smoking event and (when stock > 0) a one-cigarette consumption log inside a `db.transaction`, return `{ inventoryDecremented, error }`; never throw to the screen.
-- [X] T022 [US2] Create `src/modules/smoking/hooks/useSmokingSession.ts`: persist/resolve the active session, wall-clock elapsed time, one-second interval recomputing elapsed seconds, prompt visibility at each 300-second boundary, `continueSession()` hides the foreground prompt, and `finishSession()`/`discardSession()` use a synchronous guard.
-- [X] T023 [US2] Create `src/modules/smoking/views/SmokingSessionScreen.tsx`: live timer, persistent "Terminé" action, foreground "¿Terminaste?" modal reinforcement, and a stale-session modal after 30 minutes with finish/discard options. On success replace to `/` with a positive confirmation; empty inventory shows a clear notice.
+- [X] T022 [US2] Create `src/modules/smoking/hooks/useSmokingSession.ts`: persist/resolve the active session, wall-clock elapsed time, a one-second interval for the timer only, stale-session detection, and `finishSession()`/`discardSession()` with synchronous guards. No foreground prompt state.
+- [X] T023 [US2] Create `src/modules/smoking/views/SmokingSessionScreen.tsx`: live timer, persistent "Terminé" action, and a non-blocking inline stale-session card after 30 minutes with finish/discard options. No modal, alert, or popup. On success replace to `/` with a positive confirmation; empty inventory shows a clear notice.
 - [X] T024 [US2] Create `app/smoking-session/index.tsx` rendering `SmokingSessionScreen` and register `<Stack.Screen name="smoking-session" />` in `app/_layout.tsx`; read the trigger route parameter with a safe `habit` fallback.
 - [X] T025 [US2] Update `src/shared/types/global.ts` `HomeMetrics` with `smokedToday` and `dailyLimit`; update `src/modules/dashboard/utils/metrics.ts` `computeHomeMetrics(..., smokedToday = 0)` to return them.
 - [X] T026 [US2] Update `src/modules/dashboard/hooks/useHomeMetrics.ts` to query `countSmokingEventsBetween(getLocalDayRange(now))` and pass it into `computeHomeMetrics`; update `src/modules/dashboard/views/DashboardScreen.tsx` with a "Hoy: X / límite" card.
@@ -151,10 +151,22 @@ helpers, and notifications service are foundational because multiple stories dep
 - [X] T039 [P] Create `src/shared/utils/sessionPromptSchedule.ts` with the 12-prompt/5-minute schedule, identifier prefix, notification payload guard, stale-session threshold, and body builder. Add `src/shared/tests/unit/sessionPromptSchedule.test.ts`.
 - [X] T040 Refactor `src/shared/utils/notifications.ts` to cancel by identifier/prefix only (`idle-reminder` vs `smoking-session:`), add the `smoking-session` high-importance Android channel, and implement `scheduleSessionPrompts`/`cancelSessionPrompts` without `cancelAllScheduledNotificationsAsync`.
 - [X] T041 Update `src/shared/hooks/useIdleNotifications.ts` to suspend idle reminders while an active session row exists.
-- [X] T042 Update `src/modules/smoking/hooks/useSmokingSession.ts` to resolve or create the persisted session, schedule notifications, reuse real elapsed time, expose the stale prompt, and cancel notifications on finish/discard/unmount.
-- [X] T043 Update `src/modules/smoking/views/SmokingSessionScreen.tsx` for the notification-based copy, stale-session actions, and missing-session redirect.
+- [X] T042 Update `src/modules/smoking/hooks/useSmokingSession.ts` to resolve or create the persisted session, schedule notifications, reuse real elapsed time, expose the stale-session state, and cancel notifications on finish/discard/unmount.
+- [X] T043 Update `src/modules/smoking/views/SmokingSessionScreen.tsx` for the notification-based copy, inline stale-session actions, missing-session redirect, and a timer with no modal or alert.
 - [X] T044 Add notification-response listeners and cold-start handling in `app/_layout.tsx`, deep-linking to `/smoking-session?sessionId=...&trigger=...`.
 - [X] T045 Update `src/shared/tests/unit/notifications.test.ts` for the session title/channel; run lint, typecheck, and tests.
+
+## Phase 9: Device-Test Corrections (Persistence, Notifications, UX)
+
+**Purpose**: Fix the gaps found on a real device: events not appearing in Dashboard/History, background notification delivery, and intrusive in-app modals.
+
+- [X] T046 Record a resisted `pause_events` row atomically with `postponed_count` when the awareness loop confirms a postponement.
+- [X] T047 Record one `smoking_events` row per cigarette when inventory consumption is confirmed, in the same transaction as the inventory movement.
+- [X] T048 Make Dashboard read today's resisted pauses and today's smoking events using local-day boundaries; use the latest smoking event to restart the streak.
+- [X] T049 Merge `pause_events` and `smoking_events` in History, including totals, trigger breakdown, latest-ceded streak start, and the "Fumado" label.
+- [X] T050 Create Android channels before requesting permission, switch session prompts to `TIME_INTERVAL` triggers, and declare `SCHEDULE_EXACT_ALARM`.
+- [X] T051 Remove every in-app "¿Terminaste?" modal; keep only the local system notification and a non-blocking inline stale-session card.
+- [X] T052 Update unit tests for merged history, today counts, streak restart, notification triggers, and run lint, typecheck, and tests.
 
 ## Dependencies & Execution Order
 

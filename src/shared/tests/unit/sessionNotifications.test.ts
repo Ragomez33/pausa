@@ -11,7 +11,7 @@ jest.mock('@/db/queries', () => ({
 
 jest.mock('expo-notifications', () => ({
   AndroidImportance: { HIGH: 4 },
-  SchedulableTriggerInputTypes: { DATE: 'date' },
+  SchedulableTriggerInputTypes: { DATE: 'date', TIME_INTERVAL: 'timeInterval' },
   setNotificationHandler: jest.fn(),
   getPermissionsAsync: jest.fn(),
   requestPermissionsAsync: jest.fn(),
@@ -60,8 +60,9 @@ describe('scheduleSessionPrompts', () => {
       identifier: 'smoking-session:session-1:5',
       content: { title: '¿Terminaste?' },
       trigger: {
-        type: 'date',
-        date: new Date(startedAtMs + 5 * 60_000),
+        type: 'timeInterval',
+        seconds: 300,
+        repeats: false,
       },
     });
     expect(mockedSchedule.mock.calls[11]?.[0]).toMatchObject({

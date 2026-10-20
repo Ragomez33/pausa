@@ -15,10 +15,11 @@ End-to-end validation guide. See `data-model.md` and `contracts/` for formulas a
 
 ## 2. Event list
 
-1. Seed events with different timestamps, triggers, outcomes, and notes.
+1. Seed pause events and completed smoking sessions with different timestamps, triggers, outcomes, and notes.
 2. Open `/history`.
-3. **Expected**: events appear newest first; each row shows localized date/time, readable trigger, resisted/ceded status, and notes only when present.
-4. Seed two events with the same timestamp.
+3. **Expected**: both sources appear merged newest first; pause rows show resisted/ceded status, smoking rows show "Fumado", and notes appear only when present.
+4. Confirm that a consumption registered from Inventario also appears as a smoking session.
+5. Seed two events with the same timestamp.
    **Expected**: ordering is stable across reloads.
 
 ## 3. Success rate and streak
@@ -72,7 +73,7 @@ npm test
 
 ## Success checklist
 
-- [ ] Events newest first with date/time, trigger, status, and optional notes
+- [ ] Pause and smoking events newest first with date/time, trigger, status, and optional notes
 - [ ] Success rate correct, zero-event safe
 - [ ] Active streak follows profile/last-ceded rule and never negative
 - [ ] Avoided cigarettes, money saved, and inventory spending are visible and correct

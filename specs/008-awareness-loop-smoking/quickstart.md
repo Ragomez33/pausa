@@ -32,8 +32,8 @@ End-to-end validation guide. See `data-model.md` and `contracts/` for formulas a
 3. Background the app or lock the screen and wait for five minutes.
 4. **Expected**: a local system notification titled "¿Terminaste?" arrives with the elapsed-minutes body.
 5. Bring the app to the foreground.
-6. **Expected**: the in-app "¿Terminaste?" prompt is also visible as a reinforcement and the timer reflects real elapsed time.
-7. Tap "Seguir fumando" and confirm the next notification arrives five minutes later (up to twelve prompts).
+6. **Expected**: the screen keeps the timer running with no modal, alert, or popup; the notification remains the only five-minute interruption.
+7. Keep the session running and confirm the next notification arrives five minutes later (up to twelve prompts).
 
 ## 4. Finish session
 
@@ -61,7 +61,7 @@ End-to-end validation guide. See `data-model.md` and `contracts/` for formulas a
 2. Tap the notification.
    **Expected**: `/smoking-session` opens with the real elapsed time reconstructed from SQLite.
 3. Keep the session active for more than thirty minutes and reopen it.
-   **Expected**: the app offers "Sí, terminé" or "Descartar sesión"; discarding records no event.
+   **Expected**: an inline card offers "Terminé" or "Descartar"; discarding records no event and shows no modal.
 4. Kill the app while a session is active, then tap a pending session notification.
    **Expected**: the app cold-starts, reads the persisted session, and opens `/smoking-session`.
 

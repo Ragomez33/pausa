@@ -35,14 +35,14 @@ The root `Stack` MUST register `smoking-session`.
 ## Smoking session contract
 
 - **R-SESSION-1**: Show a live ascending timer based on wall-clock time rebuilt from the persisted `active_smoking_session.startedAtMs`; do not block the UI thread.
-- **R-SESSION-2**: Schedule up to twelve local notifications at 300-second boundaries with title "¿Terminaste?"; the in-app prompt is a foreground reinforcement only.
+- **R-SESSION-2**: Schedule up to twelve local notifications at 300-second boundaries with title "¿Terminaste?"; no emergent in-app prompt is allowed.
 - **R-SESSION-3**: "Terminé" records one session with exact seconds, decrements inventory one when available, clears the active row, cancels session notifications, and updates today's count on Home.
 - **R-SESSION-4**: Empty inventory → record session, keep stock 0, show a notice.
 - **R-SESSION-5**: Leaving the screen before finish writes no event, clears the active row, and cancels pending session notifications.
 - **R-SESSION-6**: Rapid duplicate finish taps create one session.
 - **R-SESSION-7**: On success, replace to `/` with a positive confirmation.
 - **R-SESSION-8**: Tapping a session notification opens `/smoking-session` with the persisted session id and trigger.
-- **R-SESSION-9**: At 30+ minutes elapsed, offer "Sí, terminé" and "Descartar sesión"; discarding records nothing.
+- **R-SESSION-9**: At 30+ minutes elapsed, show a non-blocking inline card with "Terminé" and "Descartar"; discarding records nothing.
 - **R-SESSION-10**: Session notifications use the `smoking-session` Android channel and the `smoking-session:` identifier prefix.
 
 ## Idle reminder isolation

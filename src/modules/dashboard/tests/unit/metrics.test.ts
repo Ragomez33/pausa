@@ -1,5 +1,7 @@
 import type { InventoryLog, PauseEvent, UserProfile } from '@/db/schema';
 
+import { latestIsoTimestamp } from '@/shared/utils/derivedMetrics';
+
 import {
   computeAvoidedCigarettes,
   computeElapsedMs,
@@ -140,7 +142,13 @@ describe('computeHomeMetrics', () => {
 
   it('resets the savings window after a ceded impulse while keeping lifetime counts', () => {
     const events = [event(2, false, 2), event(1, true, 1)];
-    const metrics = computeHomeMetrics(profile(), events, PROFILE_START + 4 * DAY_MS);
+    const metrics = computeHomeMetrics(
+      profile(),
+      events,
+      PROFILE_START + 4 * DAY_MS,
+      [],
+      1,
+    );
 
     expect(metrics.elapsedMs).toBe(2 * DAY_MS);
     expect(metrics.avoidedCigarettes).toBeCloseTo(20);
@@ -208,9 +216,12 @@ describe('computeHomeMetrics', () => {
       PROFILE_START,
       [],
       3,
+      2,
     );
 
     expect(metrics.smokedToday).toBe(3);
+    expect(metrics.cededCount).toBe(3);
+    expect(metrics.resistedCount).toBe(2);
     expect(metrics.dailyLimit).toBe(8);
   });
 
@@ -218,6 +229,22 @@ describe('computeHomeMetrics', () => {
     const metrics = computeHomeMetrics(profile(), [], PROFILE_START);
 
     expect(metrics.smokedToday).toBe(0);
+  });
+
+  it('restarts the streak from the latest smoking event', () => {
+    const smokedAt = new Date(PROFILE_START + 2 * DAY_MS).toISOString();
+    const metrics = computeHomeMetrics(
+      profile(),
+      [],
+      PROFILE_START + 4 * DAY_MS,
+      [],
+      0,
+      0,
+      smokedAt,
+    );
+
+    expect(metrics.elapsedMs).toBe(2 * DAY_MS);
+    expect(metrics.streakStart).toBe(smokedAt);
   });
 });
 
@@ -231,5 +258,21 @@ describe('formatCigarettes', () => {
     expect(formatCigarettes(0)).toBe('0');
     expect(formatCigarettes(-2)).toBe('0');
     expect(formatCigarettes(Number.NaN)).toBe('0');
+  });
+});
+
+describe('latestIsoTimestamp', () => {
+  it('returns the newest valid timestamp across sources', () => {
+    expect(
+      latestIsoTimestamp(
+        '2026-10-19T10:00:00.000Z',
+        '2026-10-19T12:00:00.000Z',
+        null,
+      ),
+    ).toBe('2026-10-19T12:00:00.000Z');
+  });
+
+  it('ignores invalid and missing values', () => {
+    expect(latestIsoTimestamp(null, 'not-a-date')).toBeNull();
   });
 });

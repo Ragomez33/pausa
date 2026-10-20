@@ -123,13 +123,13 @@ export function scheduleIdleNotification(dailyCigarettes: number): Promise<IdleS
     let permissionGranted = false;
 
     try {
+      await configureAndroidChannels();
       permissionGranted = await requestNotificationPermissions();
       if (!permissionGranted) {
         await cancelIdleNotificationInternal();
         return { scheduled: false, permissionGranted: false, error: null };
       }
 
-      await configureAndroidChannels();
       await cancelIdleNotificationInternal();
 
       const schedule = computeIdleSchedule(Date.now(), dailyCigarettes);
@@ -183,6 +183,7 @@ export function scheduleSessionPrompts(
     let permissionGranted = false;
 
     try {
+      await configureAndroidChannels();
       permissionGranted = await requestNotificationPermissions();
       if (!permissionGranted) {
         await cancelSessionNotificationsInternal();
@@ -194,7 +195,6 @@ export function scheduleSessionPrompts(
         };
       }
 
-      await configureAndroidChannels();
       await cancelSessionNotificationsInternal();
 
       const nowMs = input.nowMs ?? Date.now();
@@ -206,6 +206,10 @@ export function scheduleSessionPrompts(
       });
 
       for (const prompt of prompts) {
+        const seconds = Math.max(
+          1,
+          Math.round((prompt.scheduledAtMs - nowMs) / 1_000),
+        );
         await Notifications.scheduleNotificationAsync({
           identifier: prompt.identifier,
           content: {
@@ -214,8 +218,9 @@ export function scheduleSessionPrompts(
             data,
           },
           trigger: {
-            type: Notifications.SchedulableTriggerInputTypes.DATE,
-            date: new Date(prompt.scheduledAtMs),
+            type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+            seconds,
+            repeats: false,
             channelId: SESSION_NOTIFICATION_CHANNEL_ID,
           },
         });

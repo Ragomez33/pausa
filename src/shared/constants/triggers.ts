@@ -6,5 +6,8 @@ export const TRIGGER_LABELS: Record<string, string> = {
   anger_frustration: 'Ira/Frustración',
   work_stress: 'Estrés laboral',
   coffee_social: 'Café/Social',
+  anxiety_stress: 'Ansiedad/Estrés',
+  habit: 'Costumbre',
+  social_pressure: 'Presión Social',
   other: 'Otro',
 };

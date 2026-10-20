@@ -6,13 +6,19 @@ import {
   countSmokingEventsBetween,
   getActiveTeam,
   getLatestCededTimestamp,
+  getLatestSmokingEventTimestamp,
   getProfile,
   listTeamMembers,
   updateTeamMemberProgress,
 } from '@/db/queries';
 import type { Team, TeamMember } from '@/db/schema';
 import { getLocalDayRange } from '@/shared/utils/dayRange';
-import { DAY_MS, computeElapsedMs, resolveStreakStartMs } from '@/shared/utils/derivedMetrics';
+import {
+  DAY_MS,
+  computeElapsedMs,
+  latestIsoTimestamp,
+  resolveStreakStartMs,
+} from '@/shared/utils/derivedMetrics';
 
 import type { TeamLeaderboard } from '../utils/leaderboard';
 import { buildLeaderboard } from '../utils/leaderboard';
@@ -107,7 +113,10 @@ export function useTeamDashboard(): UseTeamDashboardResult {
         const smokedToday = countSmokingEventsBetween(dayRange.startIso, dayRange.endIso);
         const streakStart = resolveStreakStartMs(
           profile.createdAt,
-          getLatestCededTimestamp(),
+          latestIsoTimestamp(
+            getLatestCededTimestamp(),
+            getLatestSmokingEventTimestamp(),
+          ),
         );
         const streakDays = Math.floor(
           computeElapsedMs(streakStart, now) / DAY_MS,

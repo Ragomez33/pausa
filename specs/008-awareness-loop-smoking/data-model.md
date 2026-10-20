@@ -86,7 +86,7 @@ home → postpone_question
 
 ```text
 session_started → active_smoking_session row + 12 local notifications
-  ├─ every 300s → local notification("¿Terminaste?") (foreground modal reinforcement)
+  ├─ every 300s → local notification("¿Terminaste?") (no in-app modal)
   │    ├─ Seguir → timer_running
   │    └─ Terminé → recording → cancel notifications → home
   ├─ notification tap → reopen /smoking-session for the persisted row

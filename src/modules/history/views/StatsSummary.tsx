@@ -31,7 +31,7 @@ export function StatsSummary({ analytics, summary }: StatsSummaryProps): ReactEl
           <Text className="text-xs uppercase text-text-secondary">Tasa de éxito</Text>
           <Text className="mt-1 text-3xl font-black text-brand-amber">{successLabel}</Text>
           <Text className="mt-1 text-xs text-text-secondary">
-            {analytics.resisted} de {analytics.total} pausas
+            {analytics.resisted} de {analytics.total} registros
           </Text>
         </View>
         <View className="flex-1 rounded-2xl border border-border-card bg-card p-4">

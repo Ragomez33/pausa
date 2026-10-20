@@ -36,7 +36,7 @@ Format per decision: **Decision / Rationale / Alternatives considered**.
 
 ## R5. Session timer and five-minute prompt
 
-- **Decision**: Use a wall-clock start timestamp and a one-second interval to recompute elapsed seconds (ascending display). Track the next prompt boundary at 300-second multiples; when reached, show an in-screen modal "¿Terminaste?" with "Seguir" and "Terminé". The modal is native (`Modal`/`View`) and does not pause the timer. A synchronous finish guard prevents duplicate records. Leaving the screen before finish writes nothing.
+- **Decision**: Use a wall-clock start timestamp and a one-second interval to recompute elapsed seconds (ascending display). Five-minute prompts are delivered exclusively through local system notifications; the session screen renders no modal, alert, or popup. A synchronous finish guard prevents duplicate records. Leaving the screen before finish writes nothing.
 - **Rationale**: Wall-clock elapsed time stays accurate if the app is briefly backgrounded and does not block the UI. The five-minute boundaries are deterministic. The finish guard satisfies FR-016.
 - **Alternatives considered**: Decrementing a counter every second (drifts); `setInterval`-only elapsed (wrong after backgrounding); `Alert` (less consistent styling); reanimated timers (unnecessary).
 

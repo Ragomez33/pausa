@@ -7,8 +7,7 @@ import {
   computeMoneySaved,
   parseIsoTimestamp,
   resolveStreakStartMs,
-} from '@/shared/utils/derivedMetrics';
-import { computeInventorySummary } from '@/shared/utils/inventory';
+} from '@/shared/utils/derivedMetrics';import { computeInventorySummary } from '@/shared/utils/inventory';
 
 export { DAY_MS, computeAvoidedCigarettes, computeElapsedMs, computeMoneySaved };
 
@@ -51,8 +50,15 @@ export function computeHomeMetrics(
   nowMs: number,
   inventoryLogs: InventoryLog[] = [],
   smokedToday = 0,
+  pausedToday = countResisted(events),
+  latestCededTimestamp: string | null = null,
 ): HomeMetrics {
-  const streakStartMs = resolveStreakStart(profile, events);
+  const pauseStreakStartMs = resolveStreakStart(profile, events);
+  const cededStartMs = parseIsoTimestamp(latestCededTimestamp);
+  const streakStartMs =
+    cededStartMs !== null && cededStartMs > pauseStreakStartMs
+      ? cededStartMs
+      : pauseStreakStartMs;
   const elapsedMs = computeElapsedMs(streakStartMs, nowMs);
   const avoidedCigarettes = computeAvoidedCigarettes(profile.dailyCigarettes, elapsedMs);
   const moneySaved = computeMoneySaved(avoidedCigarettes, profile.packCost);
@@ -63,8 +69,8 @@ export function computeHomeMetrics(
   ).totalSpending;
 
   return {
-    resistedCount: countResisted(events),
-    cededCount: countCeded(events),
+    resistedCount: pausedToday,
+    cededCount: smokedToday,
     elapsedMs,
     streakStart: new Date(streakStartMs).toISOString(),
     avoidedCigarettes,

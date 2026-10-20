@@ -10,6 +10,23 @@ export function parseIsoTimestamp(value: string | null): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+export function latestIsoTimestamp(
+  ...timestamps: (string | null)[]
+): string | null {
+  let latest: string | null = null;
+  let latestMs: number | null = null;
+
+  for (const timestamp of timestamps) {
+    const parsed = parseIsoTimestamp(timestamp);
+    if (parsed !== null && (latestMs === null || parsed > latestMs)) {
+      latest = timestamp;
+      latestMs = parsed;
+    }
+  }
+
+  return latest;
+}
+
 export function resolveStreakStartMs(
   profileCreatedAt: string,
   latestCededTimestamp: string | null,

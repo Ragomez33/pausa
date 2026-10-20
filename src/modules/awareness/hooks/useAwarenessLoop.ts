@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 
-import { incrementPostponedCount } from '@/db/queries';
+import { recordPostponedPause } from '@/db/queries';
 import { AWARENESS_MESSAGES } from '@/shared/constants/messages';
 import { enqueueTeamSharedEvent } from '@/modules/team/sync/teamSync';
 import { SMOKING_TRIGGER_LABELS, type SmokingTrigger } from '@/shared/constants/smoking';
@@ -34,7 +34,7 @@ export function useAwarenessLoop(): UseAwarenessLoopResult {
     savingRef.current = true;
 
     try {
-      incrementPostponedCount();
+      recordPostponedPause(new Date().toISOString());
     } catch {
       savingRef.current = false;
       showAppToast({

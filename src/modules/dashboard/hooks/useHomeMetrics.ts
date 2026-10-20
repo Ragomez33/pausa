@@ -3,7 +3,9 @@ import { useCallback, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 
 import {
+  countPauseEventsBetween,
   countSmokingEventsBetween,
+  getLatestSmokingEventTimestamp,
   getProfile,
   listInventoryLogs,
   listPauseEvents,
@@ -50,10 +52,20 @@ export function useHomeMetrics(): UseHomeMetricsResult {
       const now = Date.now();
       const dayRange = getLocalDayRange(now);
       const smokedToday = countSmokingEventsBetween(dayRange.startIso, dayRange.endIso);
+      const pausedToday = countPauseEventsBetween(dayRange.startIso, dayRange.endIso, true);
+      const latestCededTimestamp = getLatestSmokingEventTimestamp();
       setState({
         loading: false,
         hasProfile: true,
-        metrics: computeHomeMetrics(profile, events, now, inventoryLogs, smokedToday),
+        metrics: computeHomeMetrics(
+          profile,
+          events,
+          now,
+          inventoryLogs,
+          smokedToday,
+          pausedToday,
+          latestCededTimestamp,
+        ),
         error: null,
       });
     } catch (caught) {

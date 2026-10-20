@@ -22,17 +22,13 @@ import {
 import { showAppToast } from '@/shared/utils/toast';
 
 import { completeSmokingSession } from '../utils/service';
-import { nextPromptBoundary } from '../utils/session';
-
-export type SmokingSessionModal = 'none' | 'finishPrompt' | 'stalePrompt';
 
 export interface UseSmokingSessionResult {
   trigger: SmokingTrigger;
   elapsedSeconds: number;
-  activeModal: SmokingSessionModal;
+  staleSession: boolean;
   finishing: boolean;
   missingSession: boolean;
-  continueSession: () => void;
   finishSession: () => boolean;
   discardSession: () => boolean;
 }
@@ -69,7 +65,6 @@ export function useSmokingSession(
 ): UseSmokingSessionResult {
   const sessionRef = useRef<ActiveSmokingSession | null>(null);
   const startedAtRef = useRef(Date.now());
-  const nextPromptRef = useRef(300);
   const finishingRef = useRef(false);
   const staleShownRef = useRef(false);
   const mountedRef = useRef(true);
@@ -77,7 +72,7 @@ export function useSmokingSession(
   const [missingSession, setMissingSession] = useState(false);
   const [sessionTrigger, setSessionTrigger] = useState<SmokingTrigger>(trigger);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [activeModal, setActiveModal] = useState<SmokingSessionModal>('none');
+  const [staleSession, setStaleSession] = useState(false);
   const [finishing, setFinishing] = useState(false);
 
   useEffect(() => {
@@ -104,11 +99,10 @@ export function useSmokingSession(
     const initialElapsed = elapsedSecondsSince(resolvedSession.startedAtMs, Date.now());
     sessionRef.current = resolvedSession;
     startedAtRef.current = resolvedSession.startedAtMs;
-    nextPromptRef.current = Math.max(nextPromptBoundary(initialElapsed), 300);
 
     if (shouldOfferStaleSession(resolvedSession.startedAtMs, Date.now())) {
       staleShownRef.current = true;
-      setActiveModal('stalePrompt');
+      setStaleSession(true);
     }
 
     setElapsedSeconds(initialElapsed);
@@ -142,15 +136,7 @@ export function useSmokingSession(
 
       if (!staleShownRef.current && shouldOfferStaleSession(startedAtRef.current, Date.now())) {
         staleShownRef.current = true;
-        setActiveModal('stalePrompt');
-        return;
-      }
-
-      if (elapsed >= nextPromptRef.current) {
-        while (elapsed >= nextPromptRef.current) {
-          nextPromptRef.current += 300;
-        }
-        setActiveModal((current) => (current === 'none' ? 'finishPrompt' : current));
+        setStaleSession(true);
       }
     }, 1_000);
 
@@ -163,10 +149,6 @@ export function useSmokingSession(
       void resetIdleNotificationFromProfile();
     };
   }, [requestedSessionId, trigger]);
-
-  const continueSession = useCallback((): void => {
-    setActiveModal((current) => (current === 'finishPrompt' ? 'none' : current));
-  }, []);
 
   const finishSession = useCallback((): boolean => {
     const activeSession = sessionRef.current;
@@ -199,7 +181,7 @@ export function useSmokingSession(
     }
 
     sessionRef.current = null;
-    setActiveModal('none');
+    setStaleSession(false);
     setFinishing(false);
     void cancelSessionPrompts();
     void resetIdleNotificationFromProfile();
@@ -236,7 +218,7 @@ export function useSmokingSession(
     }
 
     sessionRef.current = null;
-    setActiveModal('none');
+    setStaleSession(false);
     setFinishing(false);
     void cancelSessionPrompts();
     void resetIdleNotificationFromProfile();
@@ -251,10 +233,9 @@ export function useSmokingSession(
   return {
     trigger: sessionTrigger,
     elapsedSeconds,
-    activeModal,
+    staleSession,
     finishing,
     missingSession,
-    continueSession,
     finishSession,
     discardSession,
   };

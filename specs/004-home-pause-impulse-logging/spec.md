@@ -87,7 +87,7 @@ EARS-syntax requirements (per constitution section 4):
 
 - **FR-001** (Ubiquitous): The home screen shall display progress derived from the stored user profile and stored impulse events.
 - **FR-002** (Ubiquitous): The home screen shall display elapsed time since the current streak began.
-- **FR-003** (Ubiquitous): The home screen shall display a compact today summary with the resisted and ceded impulse counts.
+- **FR-003** (Ubiquitous): The home screen shall display a compact today summary with the resisted-pause count and the smoked-session count for the current local day.
 - **FR-004** (Ubiquitous): The History/Statistics view shall display the number of cigarettes avoided, estimated money saved, and cumulative inventory spending derived from stored records.
 - **FR-005** (Ubiquitous): The home screen shall not display avoided cigarettes, money saved, inventory spending, or pack-count cards.
 - **FR-006** (Event-driven): WHEN the home screen becomes visible or its underlying records change, the system shall recalculate the displayed streak and today summary.
@@ -136,7 +136,7 @@ EARS-syntax requirements (per constitution section 4):
   - Elapsed time: now minus the current streak start (never negative)
   - Cigarettes avoided: daily average × elapsed time in days
   - Money saved: `(cigarettes avoided / 20) × pack cost`
-  - Resisted count and ceded count
+  - Resisted pause count and smoked-session count for the current local day
 
 ## Success Criteria *(mandatory)*
 
@@ -179,7 +179,8 @@ The constitution requires open product decisions to be stated before planning. T
 ## Assumptions
 
 - The app is local-first; profile and impulse data never leave the device in this feature.
-- "Inicio" is the profile creation moment until a ceded impulse occurs; the latest ceded impulse becomes the new start.
+- "Inicio" is the profile creation moment until a ceded pause or smoking session occurs; the latest of those becomes the new start.
+- Today's summary uses local-day boundaries and reads resisted events from `pause_events` and smoked events from `smoking_events`.
 - A person records at most one outcome per intervention session.
 - The breathing countdown defaults to 12 seconds, within the required 10–15 second range.
 - Home metrics refresh on screen focus, after a save, and on a short periodic interval while visible (at least once per minute) so elapsed time feels live.

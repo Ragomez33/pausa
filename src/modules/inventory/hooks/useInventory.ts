@@ -6,9 +6,12 @@ import {
   createInventoryLog,
   getProfile,
   listInventoryLogs,
+  recordInventoryConsumption,
 } from '@/db/queries';
+import { enqueueTeamSharedEvent } from '@/modules/team/sync/teamSync';
 import type { InventorySummary } from '@/shared/types/global';
 import { computeInventorySummary } from '@/shared/utils/inventory';
+import { resetIdleNotificationFromProfile } from '@/shared/utils/notifications';
 import { showAppToast } from '@/shared/utils/toast';
 
 import type { InventoryFormMode } from '../utils/constants';
@@ -213,7 +216,10 @@ export function useInventory(): UseInventoryResult {
     });
 
     try {
-      createInventoryLog(payload);
+      recordInventoryConsumption({
+        timestampIso: payload.timestamp,
+        quantity,
+      });
     } catch {
       savingRef.current = false;
       setSaving(false);
@@ -229,6 +235,8 @@ export function useInventory(): UseInventoryResult {
     setSaving(false);
     setForm(EMPTY_FORM);
     load();
+    void resetIdleNotificationFromProfile();
+    enqueueTeamSharedEvent('smoked');
     showAppToast({ title: 'Consumo registrado', action: 'success' });
     return true;
   }, [form, load]);

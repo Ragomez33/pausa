@@ -125,6 +125,42 @@ export function createPauseEvent(input: NewPauseEvent): PauseEvent {
   return db.insert(pauseEvents).values(input).returning().get();
 }
 
+export function recordPostponedPause(timestampIso: string): PauseEvent {
+  return db.transaction((transaction) => {
+    transaction
+      .update(userProfile)
+      .set({ postponedCount: sql`${userProfile.postponedCount} + 1` })
+      .run();
+    return transaction
+      .insert(pauseEvents)
+      .values({
+        timestamp: timestampIso,
+        triggerEmotion: 'habit',
+        resisted: 1,
+        notes: null,
+      })
+      .returning()
+      .get();
+  });
+}
+
+export function countPauseEventsBetween(
+  startIso: string,
+  endIso: string,
+  resisted?: boolean,
+): number {
+  const filters = [between(pauseEvents.timestamp, startIso, endIso)];
+  if (resisted !== undefined) {
+    filters.push(eq(pauseEvents.resisted, resisted ? 1 : 0));
+  }
+  const rows = db
+    .select({ count: count() })
+    .from(pauseEvents)
+    .where(and(...filters))
+    .all();
+  return Number(rows[0]?.count ?? 0);
+}
+
 export function listInventoryLogs(): InventoryLog[] {
   return db
     .select()
@@ -135,6 +171,40 @@ export function listInventoryLogs(): InventoryLog[] {
 
 export function createInventoryLog(input: NewInventoryLog): InventoryLog {
   return db.insert(inventoryLogs).values(input).returning().get();
+}
+
+export function recordInventoryConsumption(input: {
+  timestampIso: string;
+  quantity: number;
+}): void {
+  const quantity = Math.floor(input.quantity);
+  if (!Number.isFinite(quantity) || quantity < 1) {
+    throw new Error('La cantidad de consumo debe ser mayor que cero.');
+  }
+
+  db.transaction((transaction) => {
+    transaction
+      .insert(inventoryLogs)
+      .values({
+        timestamp: input.timestampIso,
+        actionType: 'consumption',
+        quantity,
+        cost: null,
+      })
+      .run();
+
+    for (let index = 0; index < quantity; index += 1) {
+      transaction
+        .insert(smokingEvents)
+        .values({
+          timestamp: input.timestampIso,
+          triggerEmotion: 'habit',
+          durationSeconds: 0,
+          inventoryDecremented: 1,
+        })
+        .run();
+    }
+  });
 }
 
 export function createSmokingEvent(input: NewSmokingEvent): SmokingEvent {
@@ -156,6 +226,14 @@ export function countSmokingEventsBetween(startIso: string, endIso: string): num
     .where(between(smokingEvents.timestamp, startIso, endIso))
     .all();
   return Number(rows[0]?.count ?? 0);
+}
+
+export function getLatestSmokingEventTimestamp(): string | null {
+  const rows = db
+    .select({ timestamp: max(smokingEvents.timestamp) })
+    .from(smokingEvents)
+    .all();
+  return rows[0]?.timestamp ?? null;
 }
 
 export function getActiveSmokingSession(): ActiveSmokingSession | null {
