@@ -12,13 +12,20 @@ Thin-router contract (constitution §1.2, code-rules §9). Route files continue 
 
 ## Home contract
 
-- **R-HOME-1**: Home MUST show elapsed time, avoided cigarettes, money saved, resisted count, and ceded count.
-- **R-HOME-2**: Home MUST show a prominent Pausa button that navigates to `/pause`.
-- **R-HOME-3**: Home MUST refresh metrics on focus and at least once per minute while visible.
-- **R-HOME-4**: Home MUST show updated metrics immediately after returning from a saved intervention.
-- **R-HOME-5**: Home MUST accept an optional `feedback` parameter (`resisted` or `ceded`) and show a reinforcing inline banner.
-- **R-HOME-6**: The banner MUST be dismissible and MUST NOT block the Pausa button.
-- **R-HOME-7**: If no profile exists, home MUST redirect to `/onboarding` (existing behavior).
+- **R-HOME-1**: Home MUST show only the current streak and a compact today summary of resisted/ceded counts.
+- **R-HOME-2**: Home MUST show a large brand-orange circular Pausa action centered in the available space, with a cigarette icon and white bold "Quiero fumar" text, navigating to `/pause`.
+- **R-HOME-3**: Home MUST refresh streak and today-summary values on focus and at least once per minute while visible.
+- **R-HOME-4**: Home MUST show updated values immediately after returning from a saved intervention.
+- **R-HOME-5**: Home MUST NOT show avoided cigarettes, money saved, inventory spending, or pack-count cards; those metrics MUST be available in History/Statistics.
+- **R-HOME-6**: Home MUST accept an optional `feedback` parameter (`resisted` or `ceded`) and show a reinforcing inline banner.
+- **R-HOME-7**: The banner MUST be dismissible and MUST NOT block the Pausa action.
+- **R-HOME-8**: If no profile exists, home MUST redirect to `/onboarding` (existing behavior).
+- **R-HOME-9**: Home MUST NOT contain the removed filler phrases listed in the spec.
+- **R-HOME-10**: Home MUST show header navigation pills for Inicio, Historial, Inventario, Logros, and Equipo, with a clearly distinguishable active state.
+- **R-HOME-11**: Tapping Equipo MUST navigate to `/team` using the router.
+- **R-HOME-12**: The Pausa call-to-action MUST be a large circular brand-orange button centered in the available space.
+- **R-HOME-13**: The two home summary cards MUST use white surfaces, defined borders, soft shadows, and readable typography.
+- **R-HOME-14**: The main navigation MUST be a fixed top tab bar with five equal-width tabs that fit without horizontal scrolling and keep Equipo fully visible.
 
 ## Pause intervention contract
 

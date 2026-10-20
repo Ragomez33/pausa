@@ -22,8 +22,9 @@ The root `Stack` in `app/_layout.tsx` MUST register the `inventory` screen.
 
 ## Inventory screen contract
 
-- **R-INV-1**: The screen MUST show current cigarettes, full packs, estimated days remaining, and low-stock state.
-- **R-INV-2**: When `lowStock` is true, a clear warning banner MUST be visible.
+- **R-INV-1**: The screen MUST show current cigarettes, full packs, estimated days remaining, and the conscious-reflection state.
+- **R-INV-2**: When `lowStock` is true, a supportive financial reflection MUST be visible; a low-inventory alert MUST NOT be shown.
+- **R-INV-3**: The screen MUST use high-contrast cards, neon-accented borders, and icon-led quick actions without changing any inventory behavior.
 - **R-INV-3**: The screen MUST provide "Registrar Compra de Cajetilla" and "Registrar Consumo" actions.
 - **R-INV-4**: Only one form may be active at a time, represented by a discriminated `mode` (`none` / `purchase` / `consumption`).
 - **R-INV-5**: Purchase form: whole pack count (required) and cost (optional). Consumption form: whole cigarette count (required).

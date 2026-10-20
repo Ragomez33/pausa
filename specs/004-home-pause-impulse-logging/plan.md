@@ -6,7 +6,7 @@
 
 ## Summary
 
-Extend the existing home dashboard with four live progress metrics computed from the stored profile and impulse history: current-streak elapsed time, avoided cigarettes, estimated money saved, and lifetime resisted/ceded counts. Enhance the Pausa intervention with a 12-second breathing countdown, the five requested trigger options, optional short notes, a duplicate-save guard, and a post-save return to home with a reinforcing banner. No database schema change is required; all math remains client-side over the existing Drizzle/SQLite data.
+Simplify the home dashboard to the two essential signals: current-streak elapsed time and today's resisted/ceded summary. The avoided-cigarette, money-saved, and inventory-spending metrics move to History/Statistics, where they remain derived from stored data. The main Pausa action becomes a large centered brand-orange circle with a cigarette icon and white "Quiero fumar" text, with no subtitles or filler copy. Enhance the Pausa intervention with a 12-second breathing countdown, the five requested trigger options, optional short notes, a duplicate-save guard, and a post-save return to home with a reinforcing banner. A fixed five-tab top navigation (Inicio, Historial, Inventario, Logros, Equipo) is shared across the main views and replaces the need for back buttons there; Equipo opens `/team`. No database schema change is required; all math remains client-side over the existing Drizzle/SQLite data.
 
 ## Technical Context
 

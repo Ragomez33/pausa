@@ -6,18 +6,30 @@ import {
   getLatestCededTimestamp,
   getPauseTotals,
   getProfile,
+  listInventoryLogs,
   listPauseEvents,
   listTriggerCounts,
 } from '@/db/queries';
 import type { PauseEvent } from '@/db/schema';
 
-import { computePauseAnalytics, type PauseAnalytics } from '../utils/analytics';
+import {
+  computeAvoidedCigarettes,
+  computeMoneySaved,
+} from '@/shared/utils/derivedMetrics';
+import { computeInventorySummary } from '@/shared/utils/inventory';
+
+import {
+  computePauseAnalytics,
+  type HistorySummary,
+  type PauseAnalytics,
+} from '../utils/analytics';
 
 interface HistoryState {
   loading: boolean;
   hasProfile: boolean;
   events: PauseEvent[];
   analytics: PauseAnalytics | null;
+  summary: HistorySummary | null;
   error: Error | null;
 }
 
@@ -26,6 +38,7 @@ export interface UseHistoryResult {
   hasProfile: boolean;
   events: PauseEvent[];
   analytics: PauseAnalytics | null;
+  summary: HistorySummary | null;
   error: Error | null;
   refresh: () => void;
 }
@@ -36,6 +49,7 @@ export function useHistory(): UseHistoryResult {
     hasProfile: false,
     events: [],
     analytics: null,
+    summary: null,
     error: null,
   });
 
@@ -48,6 +62,7 @@ export function useHistory(): UseHistoryResult {
           hasProfile: false,
           events: [],
           analytics: null,
+          summary: null,
           error: null,
         });
         return;
@@ -64,12 +79,28 @@ export function useHistory(): UseHistoryResult {
         latestCeded,
         Date.now(),
       );
+      const inventory = computeInventorySummary(
+        listInventoryLogs(),
+        profile.dailyCigarettes,
+        profile.currency,
+      );
+      const avoidedCigarettes = computeAvoidedCigarettes(
+        profile.dailyCigarettes,
+        analytics.elapsedMs,
+      );
+      const summary: HistorySummary = {
+        avoidedCigarettes,
+        moneySaved: computeMoneySaved(avoidedCigarettes, profile.packCost),
+        inventorySpending: inventory.totalSpending,
+        currency: profile.currency,
+      };
 
       setState({
         loading: false,
         hasProfile: true,
         events,
         analytics,
+        summary,
         error: null,
       });
     } catch (caught) {
@@ -78,6 +109,7 @@ export function useHistory(): UseHistoryResult {
         hasProfile: false,
         events: [],
         analytics: null,
+        summary: null,
         error: caught instanceof Error ? caught : new Error('Error de base de datos'),
       });
     }

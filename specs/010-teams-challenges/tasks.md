@@ -131,6 +131,17 @@ queries, summary, and leaderboard helpers are foundational because every story d
 - [ ] T030 Execute the scenarios in `specs/010-teams-challenges/quickstart.md` on a simulator/device (create, invalid form, join/normalize/duplicate/unknown code, dashboard totals, leaderboard ties, profile/zero/storage edge cases); record results.
   - _Status: blocked pending a simulator/device. Automated equivalents passed: lint, typecheck, 151 Jest tests, and a real SQLite migration test for 0000–0006._
 - [X] T031 Run `git status` for the repository root (`src/`, `app/`, `drizzle/`, `specs/010-teams-challenges/`), summarize changed files, and present the suggested commit command for user confirmation (constitution §5.9). Do NOT commit or push automatically.
+- [X] T032 [US3] Add the Equipo item to `src/modules/dashboard/utils/navigation.ts` and render it as an active/inactive header pill in `src/modules/dashboard/views/DashboardScreen.tsx`, navigating with `router.push('/team')`; keep the existing team routes and logic untouched.
+- [X] T033 [US3] Run `npx tsc --noEmit`, `npm run lint`, and `npm test`; confirm 0 type errors, 0 lint errors, and 163 passing tests.
+
+---
+
+## Phase 8: Persistent Tabs and Sub-Screen Back Navigation
+
+- [X] T034 [P] Create `src/shared/components/MainTabBar.tsx` and `src/shared/constants/tabs.ts` with five equal-width fixed tabs, active orange styling, and `router.replace` navigation.
+- [X] T035 [US3] Use `MainTabBar` at the top of `src/modules/team/views/TeamScreen.tsx` and remove the redundant back header from the main team screen.
+- [X] T036 [P] Create `src/shared/components/SectionHeader.tsx` with a back-arrow button, section title, optional subtitle, and `router.back()` with a home fallback.
+- [X] T037 [US3] Use `SectionHeader` in `src/modules/team/views/CreateTeamScreen.tsx`, `JoinTeamScreen.tsx`, and `TeamDetailScreen.tsx`, replacing plain "Volver" text and adding a consistent sub-screen header.
 
 ---
 

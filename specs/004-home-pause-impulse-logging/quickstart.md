@@ -12,15 +12,28 @@ End-to-end validation guide. See `data-model.md` and `contracts/` for formulas a
 
 1. Create a profile with known values (for example 10 cigarettes/day, pack cost 5.00, currency USD).
 2. Open `/` with no pause events.
-3. **Expected**: elapsed time since profile creation, 0 avoided cigarettes, 0 money saved, and 0/0 resisted/ceded counts.
+3. **Expected**: elapsed time since profile creation, a today summary of `0 Pausas | 0 Fumados`, and no secondary financial cards on home.
 
 ## 2. Metrics with history
 
 1. Record one resisted and one ceded impulse with known timestamps (via the app or device DB tooling).
 2. Open home.
-3. **Expected**: resisted count 1, ceded count 1, elapsed time starts from the ceded timestamp, and avoided/money values match the formulas in `contracts/database.md`.
-4. Wait at least 30 seconds on home.
-   **Expected**: elapsed time and derived values refresh without an app restart.
+3. **Expected**: the today summary shows `1 Pausa | 1 Fumado`, elapsed time starts from the ceded timestamp, and no avoided/money/inventory cards appear on home.
+4. Open Historial.
+   **Expected**: avoided cigarettes, money saved, and inventory spending are visible in the statistics summary.
+5. Return home and wait at least 30 seconds.
+   **Expected**: elapsed time and today summary refresh without an app restart.
+
+## 2b. Header navigation and visual hierarchy
+
+1. Open home and inspect the fixed top tabs.
+   **Expected**: Inicio is visually active; Historial, Inventario, Logros, and Equipo are inactive but readable.
+2. Confirm all five tabs fit on screen without horizontal scrolling.
+   **Expected**: Equipo is 100% visible.
+3. Tap Equipo.
+   **Expected**: `/team` opens from the fixed tab bar with no back button.
+3. Return to home.
+   **Expected**: only the streak and today cards appear above a large centered orange circle with a cigarette icon and white "Quiero fumar" text.
 
 ## 3. Pause intervention and gating
 
@@ -67,10 +80,12 @@ npm test            # jest -> all pass
 
 ## Success checklist
 
-- [ ] Home metrics match stored profile/events with 0 hardcoded values
+- [ ] Home shows only streak and today-summary metrics with 0 hardcoded values
+- [ ] Secondary metrics are available in History/Statistics
 - [ ] Ceded event resets the streak window
 - [ ] Metrics refresh on focus and periodically
-- [ ] Pausa button opens the intervention
+- [ ] Fixed top tabs distinguish active/inactive, all five fit without horizontal scrolling, and Equipo opens `/team`
+- [ ] Large centered circular Pausa action opens the intervention
 - [ ] Countdown lasts 10–15 seconds and blocks outcomes
 - [ ] Five trigger options and optional notes are available
 - [ ] Resisted/ceded events persist with ISO timestamp and correct flag

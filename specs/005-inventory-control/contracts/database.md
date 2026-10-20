@@ -55,7 +55,7 @@ export interface InventorySummary {
 - **R-INV-5**: `cost` MUST be null for consumption and null or non-negative for purchases.
 - **R-INV-6**: Stock MUST be derived from logs and never below zero.
 - **R-INV-7**: Consumption greater than current stock MUST be rejected before insert.
-- **R-INV-8**: `lowStock` MUST be true when stock is empty or estimated days remaining is `<= 3`; when daily consumption is zero, only empty stock triggers the warning.
+- **R-INV-8**: `lowStock` MUST be true when stock is empty or estimated days remaining is `<= 3`; when daily consumption is zero, only empty stock triggers the conscious reflection.
 - **R-INV-9**: `totalSpending` MUST sum only non-null purchase costs.
 - **R-INV-10**: Duplicate saves MUST be prevented with a synchronous guard in addition to UI disabling.
 - **R-INV-11**: A failed insert MUST leave no partial row and surface a toast.

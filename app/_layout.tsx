@@ -9,6 +9,7 @@ import { ActivityIndicator, Text, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useTeamSync } from '@/modules/team/sync/useTeamSync';
+import { THEME_COLORS } from '@/shared/constants/theme';
 import { useDatabaseInitialized } from '@/shared/hooks/useDatabaseInitialized';
 import { useIdleNotifications } from '@/shared/hooks/useIdleNotifications';
 import { configureNotificationHandler } from '@/shared/utils/notifications';
@@ -47,30 +48,34 @@ export default function RootLayout(): ReactElement {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style="auto" />
-      {error ? (
-        <View className="flex-1 items-center justify-center bg-slate-900 px-5">
-          <Text className="text-center text-red-400">
-            No se pudo inicializar la base de datos local.
-          </Text>
-          <Text className="mt-2 text-center text-sm text-slate-400">{error.message}</Text>
-        </View>
-      ) : !ready ? (
-        <View className="flex-1 items-center justify-center bg-slate-900">
-          <ActivityIndicator size="large" color="#10b981" />
-        </View>
-      ) : (
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="pause" />
-          <Stack.Screen name="inventory" />
-          <Stack.Screen name="history" />
-          <Stack.Screen name="badges" />
-          <Stack.Screen name="smoking-session" />
-          <Stack.Screen name="onboarding" />
-          <Stack.Screen name="team" />
-        </Stack>
-      )}
+      <StatusBar style="dark" />
+      <View className="flex-1 bg-background">
+        {error ? (
+          <View className="flex-1 items-center justify-center bg-background px-5">
+            <Text className="text-center text-accent-strong">
+              No se pudo inicializar la base de datos local.
+            </Text>
+            <Text className="mt-2 text-center text-sm text-text-secondary">{error.message}</Text>
+          </View>
+        ) : !ready ? (
+          <View className="flex-1 items-center justify-center bg-background">
+            <ActivityIndicator size="large" color={THEME_COLORS.brandOrange} />
+          </View>
+        ) : (
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: THEME_COLORS.background },
+            }}
+          >
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="pause" />
+            <Stack.Screen name="smoking-session" />
+            <Stack.Screen name="onboarding" />
+            <Stack.Screen name="team" />
+          </Stack>
+        )}
+      </View>
     </SafeAreaProvider>
   );
 }

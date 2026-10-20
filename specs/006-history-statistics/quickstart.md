@@ -31,6 +31,8 @@ End-to-end validation guide. See `data-model.md` and `contracts/` for formulas a
    **Expected**: the streak restarts from that event and shows days/hours.
 4. Set the device clock behind a stored timestamp.
    **Expected**: elapsed time never shows a negative value.
+5. Seed a profile with a known daily average and pack cost, plus inventory purchases with costs.
+   **Expected**: the statistics panel shows avoided cigarettes, money saved, and inventory spending matching the stored data.
 
 ## 4. Trigger breakdown
 
@@ -73,6 +75,7 @@ npm test
 - [ ] Events newest first with date/time, trigger, status, and optional notes
 - [ ] Success rate correct, zero-event safe
 - [ ] Active streak follows profile/last-ceded rule and never negative
+- [ ] Avoided cigarettes, money saved, and inventory spending are visible and correct
 - [ ] Trigger counts/percentages and bars correct and ordered
 - [ ] Legacy/unknown trigger codes show readable labels
 - [ ] Empty/error/profile states handled

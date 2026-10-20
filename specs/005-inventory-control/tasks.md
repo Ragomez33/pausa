@@ -51,22 +51,22 @@ helpers are foundational because all three stories depend on them.
 
 ---
 
-## Phase 3: User Story 1 — See Current Stock and Low-Inventory Warning (Priority: P1) 🎯 MVP
+## Phase 3: User Story 1 — See Current Stock and a Conscious Reflection (Priority: P1) 🎯 MVP
 
-**Goal**: A dedicated inventory view shows current cigarettes, full packs, estimated days remaining, and a low-inventory warning derived from stored movements and the profile.
+**Goal**: A dedicated inventory view shows current cigarettes, full packs, estimated days remaining, and a supportive financial reflection derived from stored movements and the profile.
 
-**Independent Test**: Seed a profile and known movements, open `/inventory`, and verify stock, packs, days remaining, and warning match manual calculations; change the records and confirm the view updates on return.
+**Independent Test**: Seed a profile and known movements, open `/inventory`, and verify stock, packs, days remaining, and reflection match manual calculations; change the records and confirm the view updates on return.
 
 ### Implementation for User Story 1
 
 - [X] T009 [P] [US1] Create `src/modules/inventory/utils/constants.ts`: `LOW_STOCK_DAYS = 3`, `CIGARETTES_PER_PACK` re-use, form mode labels, and static UI strings required by code-rules §5.
 - [X] T010 [US1] Create `src/modules/inventory/hooks/useInventory.ts`: load profile and `listInventoryLogs()`, compute `computeInventorySummary`, expose `{ loading, hasProfile, summary, error, refresh }`, use `useFocusEffect`, and redirect/handle missing profile consistently with the app guard. Keep read-only for this story.
-- [X] T011 [US1] Create `src/modules/inventory/views/InventoryScreen.tsx`: render stock in cigarettes and packs, days remaining (one decimal or “No disponible” when zero daily consumption), a prominent low-inventory warning when `lowStock`, a back action, and placeholders for the two quick actions. Use NativeWind and React Native primitives only.
+- [X] T011 [US1] Create `src/modules/inventory/views/InventoryScreen.tsx`: render stock in cigarettes and packs, days remaining (one decimal or “No disponible” when zero daily consumption), a non-alarming conscious reflection when `lowStock`, a back action, and placeholders for the two quick actions. Use NativeWind and React Native primitives only.
 - [X] T012 [US1] Create `app/inventory/index.tsx` rendering `InventoryScreen` and register `<Stack.Screen name="inventory" />` in `app/_layout.tsx`.
 - [X] T013 [US1] Update `src/modules/dashboard/views/DashboardScreen.tsx` with a visible "Inventario" action/card navigating to `/inventory`; keep existing metrics and Pausa button.
 - [X] T014 [US1] Run `npm run typecheck` and `npm test` (scripts in `package.json`); fix all errors before marking US1 complete.
 
-**Checkpoint**: US1 works independently — users can see stock, packs, days, and low-inventory state at `/inventory`.
+**Checkpoint**: US1 works independently — users can see stock, packs, days, and the conscious reflection at `/inventory`.
 
 ---
 
@@ -123,11 +123,14 @@ helpers are foundational because all three stories depend on them.
 **Purpose**: Cleanup, full validation, and governance.
 
 - [X] T031 [P] Search `src/` and `app/` for unused `supply_inventory` imports, hardcoded stock/spending values, duplicated pack-size numbers instead of `CIGARETTES_PER_PACK`, and stale references; clean up.
-- [X] T032 [P] Review `src/modules/inventory/views/InventoryScreen.tsx` for touch-target sizes, readable contrast, no inline validation text, and clear low-stock messaging.
+- [X] T032 [P] Review `src/modules/inventory/views/InventoryScreen.tsx` for touch-target sizes, readable contrast, no inline validation text, and clear conscious-reflection messaging.
 - [X] T033 Run `npm run lint`, `npm run typecheck`, and `npm test` from `package.json`; confirm 0 errors and 0 failing tests.
-- [ ] T034 Execute the scenarios in `specs/005-inventory-control/quickstart.md` on a simulator/device (empty stock, purchase with/without cost, consumption, over-consumption, low-stock boundary, duplicate taps, Home sync); record results.
+- [ ] T034 Execute the scenarios in `specs/005-inventory-control/quickstart.md` on a simulator/device (empty stock, purchase with/without cost, consumption, over-consumption, conscious-reflection boundary, duplicate taps, Home sync); record results.
   - _Status: blocked pending a simulator/device. Automated equivalents passed: lint, typecheck, 85 Jest tests, and a real SQLite migration test for 0000–0003._
 - [X] T035 Run `git status` for the repository root (`src/`, `app/`, `drizzle/`, `specs/005-inventory-control/`), summarize changed files, and present the suggested commit command for user confirmation (constitution §5.9). Do NOT commit or push automatically.
+- [X] T036 [P] [US1] Add `INVENTORY_REFLECTION_MESSAGES` in `src/modules/inventory/utils/constants.ts` and replace the amber low-inventory alert in `src/modules/inventory/views/InventoryScreen.tsx` with a supportive financial reflection that never encourages restocking.
+- [X] T037 [US1] Restyle `src/modules/inventory/views/InventoryScreen.tsx` with neon-accented summary cards, a pill-style back action, icon-led quick actions, and higher-contrast forms; keep all hook, validation, persistence, and spending logic unchanged.
+- [X] T038 [US1] Run `npx tsc --noEmit`, `npm run lint`, and `npm test`; confirm 0 type errors, 0 lint errors, and 163 passing tests.
 
 ---
 
@@ -201,7 +204,7 @@ Task: "Create inventory mappers in src/modules/inventory/utils/mappers.ts" (T018
 ### Incremental Delivery
 
 1. Setup + Foundational → table, migration, queries, shared summary.
-2. US1 → stock, packs, days remaining, low-stock warning (MVP).
+2. US1 → stock, packs, days remaining, conscious reflection (MVP).
 3. US2 → purchases and optional cost.
 4. US3 → consumption guard and Home inventory spending.
 5. Polish → cleanup, full checks, device validation, commit proposal.

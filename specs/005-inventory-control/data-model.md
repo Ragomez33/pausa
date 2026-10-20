@@ -51,7 +51,7 @@ Computed from all `inventory_logs` and the profile.
 - Stock and packs as whole numbers.
 - Days remaining with one decimal, or an em dash / "No disponible" when daily consumption is zero.
 - Money formatted with the profile currency and a readable fallback for invalid codes.
-- Low-stock banner when `lowStock` is true.
+- Supportive financial reflection when `lowStock` is true (no low-inventory alert).
 
 ## Derived: HomeMetrics (extended, not stored)
 

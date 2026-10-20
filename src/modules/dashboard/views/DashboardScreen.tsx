@@ -2,15 +2,35 @@ import type { ReactElement } from 'react';
 import { useEffect, useState } from 'react';
 
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
-import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
+import { Cigarette } from '@/shared/components/icons';
+import { MainTabBar } from '@/shared/components/MainTabBar';
+import { THEME_COLORS } from '@/shared/constants/theme';
 
-import { formatElapsedDuration, formatMoney } from '@/shared/utils/utils';
+import { formatElapsedDuration } from '@/shared/utils/utils';
 
 import { useBadgeEvaluation } from '@/modules/badges/hooks/useBadgeEvaluation';
 
 import { useHomeMetrics } from '../hooks/useHomeMetrics';
 import { getFeedbackMessage } from '../utils/feedback';
-import { formatCigarettes } from '../utils/metrics';
+
+// NativeWind cannot express colored glow shadows consistently across platforms,
+// so the few neon/elevation values are applied through the `style` prop.
+const CARD_SHADOW = {
+  shadowColor: THEME_COLORS.textPrimary,
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.12,
+  shadowRadius: 10,
+  elevation: 3,
+} as const;
+
+const PANIC_GLOW = {
+  shadowColor: THEME_COLORS.brandOrange,
+  shadowOffset: { width: 0, height: 0 },
+  shadowOpacity: 0.3,
+  shadowRadius: 22,
+  elevation: 10,
+} as const;
 
 export function DashboardScreen(): ReactElement {
   const router = useRouter();
@@ -32,16 +52,16 @@ export function DashboardScreen(): ReactElement {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-slate-900">
-        <ActivityIndicator size="large" color="#10b981" />
+      <View className="flex-1 items-center justify-center bg-background">
+        <ActivityIndicator size="large" color={THEME_COLORS.brandOrange} />
       </View>
     );
   }
 
   if (error) {
     return (
-      <View className="flex-1 items-center justify-center bg-slate-900 px-6">
-        <Text className="text-center text-red-400">{error.message}</Text>
+      <View className="flex-1 items-center justify-center bg-background px-6">
+        <Text className="text-center text-accent-strong">{error.message}</Text>
       </View>
     );
   }
@@ -50,102 +70,75 @@ export function DashboardScreen(): ReactElement {
     return <Redirect href="/onboarding" />;
   }
 
+  const pauseLabel = metrics.resistedCount === 1 ? 'Pausa' : 'Pausas';
+  const smokedLabel = metrics.cededCount === 1 ? 'Fumado' : 'Fumados';
+
   return (
-    <ScrollView contentContainerClassName="flex-grow bg-slate-900 px-6 pt-16 pb-10">
-      <View className="flex-row items-center justify-between gap-2">
-        <Text className="flex-1 text-2xl font-bold text-slate-100">Tu progreso</Text>
-        <View className="flex-row gap-2">
-          <TouchableOpacity
-            onPress={() => router.push('/history')}
-            className="rounded-full bg-slate-800 px-3 py-2"
-          >
-            <Text className="text-sm font-semibold text-emerald-400">Historial</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => router.push('/inventory')}
-            className="rounded-full bg-slate-800 px-3 py-2"
-          >
-            <Text className="text-sm font-semibold text-emerald-400">Inventario</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => router.push('/badges')}
-            className="rounded-full bg-slate-800 px-3 py-2"
-          >
-            <Text className="text-sm font-semibold text-emerald-400">Logros</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+    <View className="flex-1 bg-background px-5 pt-12 pb-8">
+      <MainTabBar />
 
       {banner !== null ? (
-        <View className="mt-4 flex-row items-center rounded-xl bg-emerald-500/15 px-4 py-3">
-          <Text className="flex-1 text-sm font-medium text-emerald-300">{banner}</Text>
+        <View className="mt-4 flex-row items-center rounded-2xl border border-brand-amber/30 bg-brand-amber/10 px-4 py-3">
+          <Text className="flex-1 text-sm font-medium text-text-primary">{banner}</Text>
           <TouchableOpacity onPress={() => setBanner(null)} className="ml-3 py-1">
-            <Text className="text-xs font-semibold uppercase text-emerald-400">Cerrar</Text>
+            <Text className="text-[10px] font-black uppercase tracking-widest text-brand-amber">
+              Cerrar
+            </Text>
           </TouchableOpacity>
         </View>
       ) : null}
 
-      <View className="mt-6 rounded-2xl bg-slate-800 p-5">
-        <Text className="text-xs uppercase text-slate-400">Sin fumar desde</Text>
-        <Text className="mt-1 text-3xl font-black text-emerald-400">
-          {formatElapsedDuration(metrics.elapsedMs)}
-        </Text>
-      </View>
+      <View className="mt-5 flex-row gap-3">
+        <View
+          className="flex-1 rounded-3xl border border-border-card bg-card p-5"
+          style={CARD_SHADOW}
+        >
+          <Text className="text-[10px] font-bold uppercase tracking-[0.18em] text-text-secondary">
+            Racha actual
+          </Text>
+          <Text className="mt-2 text-3xl font-black tracking-tight text-text-primary">
+            {formatElapsedDuration(metrics.elapsedMs)}
+          </Text>
+          <Text className="mt-1 text-xs text-text-secondary">Sin fumar</Text>
+        </View>
 
-      <View className="mt-3 flex-row gap-3">
-        <View className="flex-1 rounded-2xl bg-slate-800 p-4">
-          <Text className="text-xs uppercase text-slate-400">Cigarrillos evitados</Text>
-          <Text className="mt-1 text-2xl font-bold text-slate-100">
-            {formatCigarettes(metrics.avoidedCigarettes)}
+        <View
+          className="flex-1 rounded-3xl border border-border-card bg-card p-5"
+          style={CARD_SHADOW}
+        >
+          <Text className="text-[10px] font-bold uppercase tracking-[0.18em] text-text-secondary">
+            Hoy
           </Text>
-        </View>
-        <View className="flex-1 rounded-2xl bg-slate-800 p-4">
-          <Text className="text-xs uppercase text-slate-400">Ahorrado</Text>
-          <Text className="mt-1 text-2xl font-bold text-emerald-400">
-            {formatMoney(metrics.moneySaved, metrics.currency)}
-          </Text>
-        </View>
-      </View>
-
-      <View className="mt-3 flex-row gap-3">
-        <View className="flex-1 rounded-2xl bg-slate-800 p-4">
-          <Text className="text-xs uppercase text-slate-400">Pausas logradas</Text>
-          <Text className="mt-1 text-2xl font-bold text-emerald-400">
-            {metrics.resistedCount}
-          </Text>
-        </View>
-        <View className="flex-1 rounded-2xl bg-slate-800 p-4">
-          <Text className="text-xs uppercase text-slate-400">Cesiones</Text>
-          <Text className="mt-1 text-2xl font-bold text-slate-300">{metrics.cededCount}</Text>
-        </View>
-      </View>
-
-      <View className="mt-3 flex-row gap-3">
-        <View className="flex-1 rounded-2xl bg-slate-800 p-4">
-          <Text className="text-xs uppercase text-slate-400">Gastado en inventario</Text>
-          <Text className="mt-1 text-xl font-bold text-slate-100">
-            {formatMoney(metrics.inventorySpending, metrics.currency)}
-          </Text>
-        </View>
-        <View className="flex-1 rounded-2xl bg-slate-800 p-4">
-          <Text className="text-xs uppercase text-slate-400">Hoy</Text>
-          <Text className="mt-1 text-xl font-bold text-slate-100">
-            {metrics.smokedToday} / {metrics.dailyLimit > 0 ? metrics.dailyLimit : '—'}
-          </Text>
+          <View className="mt-3 flex-row items-baseline gap-1">
+            <Text className="text-2xl font-black text-text-primary">
+              {metrics.resistedCount}
+            </Text>
+            <Text className="text-[10px] font-bold uppercase text-text-secondary">
+              {pauseLabel}
+            </Text>
+            <Text className="mx-1 text-sm font-bold text-border-card">|</Text>
+            <Text className="text-2xl font-black text-accent-strong">
+              {metrics.cededCount}
+            </Text>
+            <Text className="text-[10px] font-bold uppercase text-text-secondary">
+              {smokedLabel}
+            </Text>
+          </View>
+          <Text className="mt-1 text-xs text-text-secondary">Pausas vs. cesiones</Text>
         </View>
       </View>
 
-      <View className="flex-1 items-center justify-center">
+      <View className="flex-1 items-center justify-center py-6">
         <TouchableOpacity
           onPress={() => router.push('/pause')}
-          className="h-52 w-52 items-center justify-center rounded-full bg-emerald-500 px-4 active:bg-emerald-400"
+          activeOpacity={0.86}
+          className="h-60 w-60 items-center justify-center rounded-full border-4 border-white/40 bg-brand-orange active:bg-accent-pressed"
+          style={PANIC_GLOW}
         >
-          <Text className="text-center text-2xl font-black text-slate-900">Quiero fumar</Text>
-          <Text className="mt-1 text-center text-xs font-semibold text-slate-800">
-            Tengo ganas de fumar
-          </Text>
+          <Cigarette color={THEME_COLORS.white} size={52} strokeWidth={2.2} />
+          <Text className="mt-4 text-xl font-bold text-white">Quiero fumar</Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+    </View>
   );
 }

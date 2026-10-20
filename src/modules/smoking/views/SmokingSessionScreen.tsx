@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { Modal, Text, TouchableOpacity, View } from 'react-native';
 
 import { SMOKING_TRIGGER_LABELS, isSmokingTrigger } from '@/shared/constants/smoking';
@@ -17,25 +17,25 @@ export function SmokingSessionScreen(): ReactElement {
 
   function handleFinish(): void {
     if (finishSession()) {
-      router.replace('/');
+      router.replace('/' as Href);
     }
   }
 
   return (
-    <View className="flex-1 items-center justify-center bg-slate-900 px-6">
-      <Text className="text-xs uppercase text-slate-500">Sesión de fumado</Text>
-      <Text className="mt-2 text-center text-lg font-semibold text-slate-200">
+    <View className="flex-1 items-center justify-center bg-background px-6">
+      <Text className="text-xs uppercase text-text-secondary">Sesión de fumado</Text>
+      <Text className="mt-2 text-center text-lg font-semibold text-text-primary">
         {SMOKING_TRIGGER_LABELS[trigger]}
       </Text>
 
-      <View className="mt-10 h-52 w-52 items-center justify-center rounded-full border-4 border-amber-500/40 bg-amber-500/10">
-        <Text className="text-4xl font-black text-amber-400">
+      <View className="mt-10 h-52 w-52 items-center justify-center rounded-full border-4 border-brand-amber/40 bg-brand-amber/10">
+        <Text className="text-4xl font-black text-brand-amber">
           {formatDuration(elapsedSeconds)}
         </Text>
-        <Text className="mt-1 text-xs uppercase text-slate-500">en curso</Text>
+        <Text className="mt-1 text-xs uppercase text-text-secondary">en curso</Text>
       </View>
 
-      <Text className="mt-8 text-center text-sm text-slate-400">
+      <Text className="mt-8 text-center text-sm text-text-secondary">
         El temporizador corre en primer plano. Cada cinco minutos te preguntaremos si terminaste.
       </Text>
 
@@ -43,10 +43,12 @@ export function SmokingSessionScreen(): ReactElement {
         onPress={handleFinish}
         disabled={finishing}
         className={`mt-10 w-full items-center rounded-2xl py-5 ${
-          finishing ? 'bg-slate-700' : 'bg-emerald-500 active:bg-emerald-400'
+          finishing ? 'bg-border-card' : 'bg-brand-orange active:bg-accent-pressed'
         }`}
       >
-        <Text className={`text-base font-bold ${finishing ? 'text-slate-400' : 'text-slate-900'}`}>
+        <Text
+          className={`text-base font-bold ${finishing ? 'text-text-secondary' : 'text-white'}`}
+        >
           Terminé
         </Text>
       </TouchableOpacity>
@@ -58,27 +60,27 @@ export function SmokingSessionScreen(): ReactElement {
         onRequestClose={continueSession}
       >
         <View className="flex-1 items-center justify-center bg-black/70 px-6">
-          <View className="w-full rounded-3xl bg-slate-800 p-6">
-            <Text className="text-center text-2xl font-black text-slate-100">
+          <View className="w-full rounded-3xl border border-border-card bg-card p-6">
+            <Text className="text-center text-2xl font-black text-text-primary">
               ¿Terminaste?
             </Text>
-            <Text className="mt-2 text-center text-sm text-slate-400">
+            <Text className="mt-2 text-center text-sm text-text-secondary">
               Han pasado cinco minutos de sesión.
             </Text>
 
             <TouchableOpacity
               onPress={handleFinish}
               disabled={finishing}
-              className="mt-6 items-center rounded-xl bg-emerald-500 py-4 active:bg-emerald-400"
+              className="mt-6 items-center rounded-xl bg-brand-orange py-4 active:bg-accent-pressed"
             >
-              <Text className="font-bold text-slate-900">Sí, terminé</Text>
+              <Text className="font-bold text-white">Sí, terminé</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={continueSession}
-              className="mt-3 items-center rounded-xl border border-slate-600 py-4 active:bg-slate-700"
+              className="mt-3 items-center rounded-xl border border-border-card py-4 active:bg-card/70"
             >
-              <Text className="font-bold text-slate-300">Seguir fumando</Text>
+              <Text className="font-bold text-text-secondary">Seguir fumando</Text>
             </TouchableOpacity>
           </View>
         </View>

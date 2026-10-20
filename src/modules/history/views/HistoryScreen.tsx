@@ -1,14 +1,11 @@
 import type { ReactElement } from 'react';
 import { memo, useMemo } from 'react';
 
-import { Redirect, useRouter } from 'expo-router';
-import {
-  ActivityIndicator,
-  FlatList,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Redirect } from 'expo-router';
+import { ActivityIndicator, FlatList, Text, View } from 'react-native';
+
+import { MainTabBar } from '@/shared/components/MainTabBar';
+import { THEME_COLORS } from '@/shared/constants/theme';
 
 import { useHistory } from '../hooks/useHistory';
 import { HISTORY_EMPTY_MESSAGE } from '../utils/constants';
@@ -22,58 +19,60 @@ interface HistoryRowProps {
 
 const HistoryRow = memo(function HistoryRow({ entry }: HistoryRowProps): ReactElement {
   return (
-    <View className="mt-3 rounded-2xl bg-slate-800 p-4">
+    <View className="mt-3 rounded-2xl border border-border-card bg-card p-4">
       <View className="flex-row items-start justify-between gap-3">
-        <Text className="flex-1 text-xs text-slate-400">{entry.dateTimeLabel}</Text>
+        <Text className="flex-1 text-xs text-text-secondary">{entry.dateTimeLabel}</Text>
         <View
           className={`rounded-full px-3 py-1 ${
-            entry.resisted ? 'bg-emerald-500/20' : 'bg-amber-500/20'
+            entry.resisted ? 'bg-brand-amber/20' : 'bg-brand-orange/20'
           }`}
         >
           <Text
             className={`text-xs font-semibold ${
-              entry.resisted ? 'text-emerald-300' : 'text-amber-300'
+              entry.resisted ? 'text-brand-amber' : 'text-accent-strong'
             }`}
           >
             {entry.outcomeLabel}
           </Text>
         </View>
       </View>
-      <Text className="mt-2 text-base font-semibold text-slate-100">{entry.triggerLabel}</Text>
+      <Text className="mt-2 text-base font-semibold text-text-primary">{entry.triggerLabel}</Text>
       {entry.notes !== null ? (
-        <Text className="mt-1 text-sm text-slate-400">{entry.notes}</Text>
+        <Text className="mt-1 text-sm text-text-secondary">{entry.notes}</Text>
       ) : null}
     </View>
   );
 });
 
 export function HistoryScreen(): ReactElement {
-  const router = useRouter();
-  const { loading, hasProfile, events, analytics, error } = useHistory();
+  const { loading, hasProfile, events, analytics, summary, error } = useHistory();
   const entries = useMemo(() => events.map(toHistoryEntry), [events]);
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-slate-900">
-        <ActivityIndicator size="large" color="#10b981" />
+      <View className="flex-1 items-center justify-center bg-background">
+        <ActivityIndicator size="large" color={THEME_COLORS.brandOrange} />
       </View>
     );
   }
 
   if (error) {
     return (
-      <View className="flex-1 items-center justify-center bg-slate-900 px-6">
-        <Text className="text-center text-red-400">{error.message}</Text>
+      <View className="flex-1 items-center justify-center bg-background px-6">
+        <Text className="text-center text-accent-strong">{error.message}</Text>
       </View>
     );
   }
 
-  if (!hasProfile || analytics === null) {
+  if (!hasProfile || analytics === null || summary === null) {
     return <Redirect href="/onboarding" />;
   }
 
   return (
-    <View className="flex-1 bg-slate-900">
+    <View className="flex-1 bg-background">
+      <View className="px-5 pt-12">
+        <MainTabBar />
+      </View>
       <FlatList
         data={entries}
         keyExtractor={(item) => String(item.id)}
@@ -83,22 +82,19 @@ export function HistoryScreen(): ReactElement {
         removeClippedSubviews
         ListHeaderComponent={
           <View>
-            <TouchableOpacity onPress={() => router.back()} className="mt-12 self-start py-2">
-              <Text className="text-sm font-semibold text-emerald-400">Volver</Text>
-            </TouchableOpacity>
-            <Text className="mt-4 text-2xl font-bold text-slate-100">Historial</Text>
-            <Text className="mt-2 text-sm text-slate-400">
+            <Text className="mt-5 text-2xl font-bold text-text-primary">Historial</Text>
+            <Text className="mt-2 text-sm text-text-secondary">
               Revisa tus pausas y descubre qué las dispara.
             </Text>
-            <StatsSummary analytics={analytics} />
+            <StatsSummary analytics={analytics} summary={summary} />
             <TriggerBreakdown triggers={analytics.triggers} />
-            <Text className="mt-6 text-xs uppercase text-slate-500">Pausas registradas</Text>
+            <Text className="mt-6 text-xs uppercase text-text-secondary">Pausas registradas</Text>
           </View>
         }
         renderItem={({ item }) => <HistoryRow entry={item} />}
         ListEmptyComponent={
-          <View className="mt-6 rounded-2xl bg-slate-800 p-5">
-            <Text className="text-center text-sm text-slate-400">{HISTORY_EMPTY_MESSAGE}</Text>
+          <View className="mt-6 rounded-2xl border border-border-card bg-card p-5">
+            <Text className="text-center text-sm text-text-secondary">{HISTORY_EMPTY_MESSAGE}</Text>
           </View>
         }
       />

@@ -63,6 +63,9 @@ The person opens the squad dashboard and sees the challenge summary, collective 
 3. **Given multiple members, **When** the dashboard renders, **Then** each member shows smoked-today versus their daily limit.
 4. **Given no active team, **When** the dashboard opens, **Then** a clear empty state offers create/join actions.
 5. **Given a member has no recorded progress, **Then** their values show zero/empty without crashing.
+6. **Given the home screen, **When** the person taps the Equipo navigation item, **Then** the squad dashboard opens at `/team`.
+7. **Given** the main `/team` screen, **When** it opens, **Then** it uses the persistent top tab bar with Equipo active and no redundant back button.
+8. **Given** `/team/create`, `/team/join`, or `/team/[id]`, **When** the screen opens, **Then** it shows a back-arrow header with the section title and a working back action.
 
 ---
 
@@ -125,7 +128,12 @@ EARS-syntax requirements (per constitution section 4):
 - **FR-019** (State-driven): WHILE no profile exists, the system shall route the person to onboarding and shall not create/join teams.
 - **FR-020** (Unwanted Behavior): IF local storage fails, THEN the system shall not persist a partial team or membership and shall show a clear error.
 - **FR-021** (Ubiquitous): The system shall keep all team, membership, and progress data local, with no network calls in this feature.
-- **FR-022** (Ubiquitous): The team interface shall use clean, direct, responsive utility-styled native components.
+- **FR-022** (Ubiquitous): The team interface shall use high-contrast, modern, responsive utility-styled native components consistent with the dashboard language.
+- **FR-023** (Ubiquitous): The home screen shall expose an Equipo navigation item alongside Historial, Inventario, and Logros.
+- **FR-024** (Event-driven): WHEN the person taps the Equipo navigation item on home, the system shall navigate to `/team`.
+- **FR-025** (Ubiquitous): The main `/team` screen shall use the persistent top tab bar with Equipo active and shall not display a redundant back button.
+- **FR-026** (Ubiquitous): The team sub-screens `/team/create`, `/team/join`, and `/team/[id]` shall display a back-arrow header with the section title.
+- **FR-027** (Event-driven): WHEN the person taps the back arrow on a team sub-screen, the system shall return to the previous screen, falling back to the home screen when there is no history.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -163,6 +171,7 @@ EARS-syntax requirements (per constitution section 4):
 - **SC-007**: 100% of team operations remain local, with 0 network requests.
 - **SC-008**: A person can create a team or join one in under 60 seconds.
 - **SC-009**: Invalid names, durations, levels, and invite codes are blocked with a visible message in 100% of tested cases.
+- **SC-010**: 100% of taps on the home Equipo navigation item open `/team`.
 
 ## Clarification Gates
 

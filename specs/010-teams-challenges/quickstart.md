@@ -8,6 +8,21 @@ End-to-end validation guide. See `data-model.md` and `contracts/` for formulas a
 - App running on a simulator/device (`npx expo start -c`).
 - A saved profile with a known daily cigarette average.
 
+## 0. Reach the squad from home
+
+1. Open home and locate the header navigation pills.
+2. Tap "Equipo".
+   **Expected**: `/team` opens; the pill shows a clear inactive state on home while the active home pill remains distinguishable.
+
+## 0b. Tabs and back navigation
+
+1. Open `/team` from the fixed top tabs.
+2. Confirm the Equipo tab is active and no redundant back button appears.
+3. Open `/team/create`, `/team/join`, and a team detail route.
+4. Confirm each sub-screen shows a back-arrow header and section title, and tap the arrow.
+
+**Expected**: The main team screen is reached through the tab bar; sub-screens return to the previous screen, falling back to home from a deep link.
+
 ## 1. Create a team
 
 1. Open `/team`, then choose "Crear equipo".
@@ -72,6 +87,9 @@ npm test
 
 ## Success checklist
 
+- [ ] Home "Equipo" navigation opens `/team`
+- [ ] The main team screen uses the fixed tab bar without a back button
+- [ ] Team sub-screens show a back-arrow header with a working back action
 - [ ] Team + leader created atomically with unique code and calculated limit
 - [ ] Join by normalized code; duplicates and unknown codes blocked
 - [ ] Dashboard metadata, collective metrics, and per-member today/limit

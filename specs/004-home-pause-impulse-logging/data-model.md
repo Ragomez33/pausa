@@ -41,9 +41,9 @@ One row per completed intervention.
 
 Historical stored codes (`work_stress`, `coffee_social`, `other`) remain valid as opaque strings and are not rewritten.
 
-## Derived entity: HomeMetrics (not stored)
+## Derived entity: HomeMetrics and HistorySummary (not stored)
 
-Computed from the profile, all stored events, and a `now` timestamp.
+Computed from the profile, all stored events, inventory records, and a `now` timestamp. Home displays only `elapsedMs` and the resisted/ceded counts; the remaining fields feed History/Statistics.
 
 | Field | Meaning |
 |-------|---------|
@@ -63,10 +63,10 @@ Computed from the profile, all stored events, and a `now` timestamp.
 
 **Display rules**
 
-- Elapsed time: compact duration (for example `3d 4h 12m`).
-- Avoided cigarettes: at most one decimal.
-- Money: existing currency formatter with the profile currency.
-- Counters: resisted and ceded shown separately.
+- Home: compact duration (for example `3d 4h 12m`) and a today summary such as `1 Pausa | 1 Fumado`.
+- Home: no avoided-cigarette, money, inventory-spending, or pack cards.
+- History/Statistics: avoided cigarettes at most one decimal, money with the existing currency formatter, and inventory spending with the profile currency.
+- Counters: resisted and ceded shown separately on home; detailed totals are available in History/Statistics.
 
 ## Relationships
 

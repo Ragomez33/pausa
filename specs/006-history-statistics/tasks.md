@@ -201,6 +201,13 @@ Task: "Create history constants and toHistoryEntry mapper" (T010)
 
 ---
 
+## Dashboard Secondary Metrics
+
+- [X] T027 [P] Extend `src/modules/history/hooks/useHistory.ts` to load existing inventory logs and expose avoided cigarettes, money saved, inventory spending, and currency using shared calculation helpers; no SQLite/Drizzle query changes.
+- [X] T028 [P] Extend `src/modules/history/views/StatsSummary.tsx` with avoided-cigarettes, money-saved, and inventory-spending cards, and pass the summary from `src/modules/history/views/HistoryScreen.tsx`.
+
+---
+
 ## Notes
 
 - `[P]` marks different files with no dependency on an incomplete task.

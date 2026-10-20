@@ -32,5 +32,5 @@
 ## Notes
 
 - The original request's technical references (Drizzle, file paths, table names) were translated into outcome-focused requirements. Implementation choices are deferred to `/speckit.plan`.
-- Three Clarification Gates are documented with recommended defaults: movement quantity unit, low-inventory threshold, and home financial meaning. None blocks planning because a reasonable default exists for each.
+- Three Clarification Gates are documented with recommended defaults: movement quantity unit, conscious-reflection threshold, and home financial meaning. None blocks planning because a reasonable default exists for each.
 - Validation iteration 1 (2026-10-19): all checks pass.

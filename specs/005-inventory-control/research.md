@@ -51,7 +51,7 @@ Format per decision: **Decision / Rationale / Alternatives considered**.
 
 ## R6. Inventory UI and route
 
-- **Decision**: Add a dedicated thin route `app/inventory/index.tsx` that renders `InventoryScreen`, and register `inventory` in the root `Stack`. The Home gains an "Inventario" action/card navigating to `/inventory`. The inventory screen shows stock cards, a low-stock banner, two quick actions ("Registrar Compra de Cajetilla" and "Registrar Consumo"), and an inline form driven by a discriminated `mode` union (`'none' | 'purchase' | 'consumption'`).
+- **Decision**: Add a dedicated thin route `app/inventory/index.tsx` that renders `InventoryScreen`, and register `inventory` in the root `Stack`. The Home gains an "Inventario" action/card navigating to `/inventory`. The inventory screen shows stock cards, a conscious financial reflection instead of a low-stock alert, two quick actions ("Registrar Compra de Cajetilla" and "Registrar Consumo"), and an inline form driven by a discriminated `mode` union (`'none' | 'purchase' | 'consumption'`).
 - **Rationale**: Follows the constitution's module/route layout and code-rules §9/§10 (single active form/modal via a union). Keeps the Home focused while giving inventory a dedicated management surface.
 - **Alternatives considered**: Forcing everything into the Home (crowded, harder to test); loose `app/inventory.tsx` (collides with the resource-folder convention); multiple boolean flags for forms (forbidden).
 
@@ -75,10 +75,10 @@ Format per decision: **Decision / Rationale / Alternatives considered**.
 
 ## R10. Error and empty behavior
 
-- **Decision**: Missing profile → existing onboarding redirect. No logs → stock 0, packs 0, days 0 or unavailable, low-stock warning. Storage failure on read → clear error state; on write → toast, no partial row, form remains retryable. Invalid currency falls back to a readable string.
+- **Decision**: Missing profile → existing onboarding redirect. No logs → stock 0, packs 0, days 0 or unavailable, conscious financial reflection. Storage failure on read → clear error state; on write → toast, no partial row, form remains retryable. Invalid currency falls back to a readable string.
 - **Rationale**: Matches spec edge cases and existing app conventions.
 - **Alternatives considered**: Silent failure (rejected); destructive reset (rejected).
 
 ## Resolved unknowns
 
-All Technical Context fields are resolved; no `NEEDS CLARIFICATION` markers remain. Spec Clarification Gates are resolved by R2 (quantity unit), R3 (low-stock threshold), and R7 (home financial meaning).
+All Technical Context fields are resolved; no `NEEDS CLARIFICATION` markers remain. Spec Clarification Gates are resolved by R2 (quantity unit), R3 (conscious-reflection threshold), and R7 (home financial meaning).

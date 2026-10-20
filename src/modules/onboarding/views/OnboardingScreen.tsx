@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { useState } from 'react';
 
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 
+import { THEME_COLORS } from '@/shared/constants/theme';
 import type { ProfileFormValues } from '@/shared/types/global';
 
 import { useOnboardingProfile } from '../hooks/useOnboardingProfile';
@@ -32,49 +33,49 @@ export function OnboardingScreen(): ReactElement {
   async function handleSubmit(): Promise<void> {
     const saved = await submit(formData);
     if (saved) {
-      router.replace('/');
+      router.replace('/' as Href);
     }
   }
 
   const inputClass =
-    'mt-2 rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-base text-slate-100';
+    'mt-2 rounded-xl border border-border-card bg-card px-4 py-3 text-base text-text-primary';
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-slate-900"
+      className="flex-1 bg-background"
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerClassName="flex-grow justify-center px-6 py-10">
-        <Text className="text-3xl font-bold text-slate-100">Bienvenido a Pausa</Text>
-        <Text className="mt-2 text-base text-slate-400">
+        <Text className="text-3xl font-bold text-text-primary">Bienvenido a Pausa</Text>
+        <Text className="mt-2 text-base text-text-secondary">
           Configura tu perfil para empezar a tomar conciencia de tu hábito.
         </Text>
 
-        <Text className="mt-8 text-sm font-medium text-slate-300">
+        <Text className="mt-8 text-sm font-medium text-text-primary">
           ¿Cuántos cigarrillos fumas al día?
         </Text>
         <TextInput
           className={inputClass}
           keyboardType="number-pad"
           placeholder="Ej: 10"
-          placeholderTextColor="#64748b"
+          placeholderTextColor={THEME_COLORS.textSecondary}
           value={formData.dailyCigarettes}
           onChangeText={(value) => updateField('dailyCigarettes', value)}
         />
 
-        <Text className="mt-6 text-sm font-medium text-slate-300">
+        <Text className="mt-6 text-sm font-medium text-text-primary">
           ¿Cuánto cuesta una cajetilla?
         </Text>
         <TextInput
           className={inputClass}
           keyboardType="decimal-pad"
           placeholder="Ej: 5.50"
-          placeholderTextColor="#64748b"
+          placeholderTextColor={THEME_COLORS.textSecondary}
           value={formData.packCost}
           onChangeText={(value) => updateField('packCost', value)}
         />
 
-        <Text className="mt-6 text-sm font-medium text-slate-300">Moneda</Text>
+        <Text className="mt-6 text-sm font-medium text-text-primary">Moneda</Text>
         <View className="mt-2 flex-row flex-wrap gap-2">
           {CURRENCY_OPTIONS.map((currency) => {
             const selected = formData.currency === currency;
@@ -83,12 +84,12 @@ export function OnboardingScreen(): ReactElement {
                 key={currency}
                 onPress={() => updateField('currency', currency)}
                 className={`rounded-full px-4 py-2 ${
-                  selected ? 'bg-emerald-500' : 'bg-slate-800'
+                  selected ? 'bg-brand-orange' : 'border border-border-card bg-card'
                 }`}
               >
                 <Text
                   className={`text-sm font-semibold ${
-                    selected ? 'text-slate-900' : 'text-slate-300'
+                    selected ? 'text-white' : 'text-text-secondary'
                   }`}
                 >
                   {currency}
@@ -98,13 +99,13 @@ export function OnboardingScreen(): ReactElement {
           })}
         </View>
 
-        <Text className="mt-6 text-sm font-medium text-slate-300">
+        <Text className="mt-6 text-sm font-medium text-text-primary">
           Tu meta o motivo (opcional)
         </Text>
         <TextInput
           className={inputClass}
           placeholder="Ej: Recuperar mi salud"
-          placeholderTextColor="#64748b"
+          placeholderTextColor={THEME_COLORS.textSecondary}
           multiline
           value={formData.quitGoal}
           onChangeText={(value) => updateField('quitGoal', value)}
@@ -115,9 +116,9 @@ export function OnboardingScreen(): ReactElement {
             void handleSubmit();
           }}
           disabled={submitting}
-          className="mt-10 items-center rounded-xl bg-emerald-500 py-4 active:bg-emerald-400"
+          className="mt-10 items-center rounded-xl bg-brand-orange py-4 active:bg-accent-pressed"
         >
-          <Text className="text-base font-bold text-slate-900">
+          <Text className="text-base font-bold text-white">
             {submitting ? 'Guardando…' : 'Comenzar'}
           </Text>
         </TouchableOpacity>

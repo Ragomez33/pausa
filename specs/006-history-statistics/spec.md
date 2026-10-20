@@ -43,6 +43,7 @@ The person sees an overall success rate for their impulses and how long their cu
 3. **Given** no ceded event, **When** the active streak is calculated, **Then** it starts at the profile creation moment.
 4. **Given** a ceded event after profile creation, **When** the active streak is calculated, **Then** it starts at the most recent ceded event.
 5. **Given** the statistics panel, **When** the streak is displayed, **Then** it shows whole days and hours (for example, “3d 4h”).
+6. **Given** the statistics panel, **When** it renders, **Then** it also shows avoided cigarettes, money saved, and cumulative inventory spending derived from the stored profile and inventory movements.
 
 ---
 
@@ -105,6 +106,10 @@ EARS-syntax requirements (per constitution section 4):
 - **FR-020** (State-driven): WHILE no events exist, the history list and trigger breakdown shall show clear empty states.
 - **FR-021** (Ubiquitous): The system shall keep all history and analytics processing on the device without network calls or remote synchronization.
 - **FR-022** (State-driven): WHILE the device clock or a stored timestamp would produce a negative duration, the system shall display zero elapsed time.
+- **FR-023** (Ubiquitous): The statistics panel shall display avoided cigarettes calculated from the profile's daily cigarette average and the active streak window.
+- **FR-024** (Ubiquitous): The statistics panel shall display money saved using the avoided-cigarette count and the profile's pack cost.
+- **FR-025** (Ubiquitous): The statistics panel shall display cumulative inventory spending derived from stored purchase records.
+- **FR-026** (Ubiquitous): These secondary metrics shall be available in History/Statistics even though they are not shown on the home dashboard.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -118,6 +123,7 @@ EARS-syntax requirements (per constitution section 4):
   - Total impulses
   - Resisted count and ceded count
   - Success rate percentage
+  - Avoided cigarettes, money saved, and inventory spending
   - Active streak start (profile creation or latest ceded event)
   - Active streak duration in days and hours
   - Trigger counts and percentages, sorted by frequency

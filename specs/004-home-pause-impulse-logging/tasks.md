@@ -125,6 +125,24 @@ schema changes.
 - [ ] T027 Execute the scenarios in `specs/004-home-pause-impulse-logging/quickstart.md` on a simulator/device (home math, countdown gating, both outcomes, duplicate taps, zero values, error state); record results.
   - _Status: blocked pending a simulator/device. Automated equivalents passed: typecheck, lint, and 62 Jest tests._
 - [X] T028 Run `git status` for the repository root (`src/`, `app/`, `specs/004-home-pause-impulse-logging/`), summarize changed files, and present the suggested commit command for user confirmation (constitution §5.9). Do NOT commit or push automatically.
+- [X] T029 [P] Add `DASHBOARD_NAV_ITEMS` and nav icon metadata in `src/modules/dashboard/utils/navigation.ts`, metric accent styles in `src/modules/dashboard/utils/constants.ts`, and a centralized `src/shared/components/icons.ts` bridge using lucide CJS icon subpaths; keep pure feedback constants free of React Native icon imports so Jest keeps loading them.
+- [X] T030 [US1] Update `src/modules/dashboard/views/DashboardScreen.tsx` with active/inactive navigation for Inicio, Historial, Inventario, Logros, and Equipo; this early pill implementation was later replaced by the fixed `MainTabBar` in T038–T039.
+- [X] T031 [US1] Restyle `src/modules/dashboard/views/DashboardScreen.tsx` with high-contrast neon-bordered cards, a glowing streak hero, and an intervention-style "Quiero fumar" surface replacing the flat green circle; keep all metric values and navigation to `/pause` unchanged.
+- [X] T032 [US1] Run `npx tsc --noEmit`, `npm run lint`, and `npm test`; confirm 0 type errors, 0 lint errors, and 163 passing tests.
+
+---
+
+## Phase 7: Dashboard Focus Revision
+
+**Purpose**: Reduce the home screen to the two essential metrics and one central action, move secondary metrics to History, and remove filler copy.
+
+- [X] T033 [P] [US1] Simplify `src/modules/dashboard/views/DashboardScreen.tsx` to show only the current-streak card and a compact today summary of resisted/ceded counts; remove avoided-cigarettes, money-saved, inventory-spending, and pack cards.
+- [X] T034 [US1] Replace the wide intervention surface in `src/modules/dashboard/views/DashboardScreen.tsx` with a large `rounded-full` brand-orange circle centered in the available screen space, using a cigarette icon and white bold "Quiero fumar" text with no interior subtitle.
+- [X] T035 [US1] Remove the four filler phrases from `src/modules/dashboard/views/DashboardScreen.tsx`: "Menos humo, más control. Un día a la vez.", "¿Aparece un impulso?", "Respira primero. La decisión puede esperar.", and "Activa una pausa de 12 segundos...".
+- [X] T036 [US1] Surface avoided cigarettes, money saved, and inventory spending in `src/modules/history/hooks/useHistory.ts` and `src/modules/history/views/StatsSummary.tsx` using existing local queries and shared calculation helpers; do not alter SQLite/Drizzle logic.
+- [X] T037 [US1] Run `npx tsc --noEmit`, `npm run lint`, and `npm test`; confirm the centered layout, metrics, and calculations remain correct.
+- [X] T038 [P] [US1] Create `src/shared/constants/tabs.ts` and `src/shared/components/MainTabBar.tsx` with five equal-width fixed tabs and no horizontal ScrollView.
+- [X] T039 [US1] Use `MainTabBar` on `/`, `/history`, `/inventory`, `/badges`, and `/team`; remove redundant "Volver" controls from those main views while keeping back navigation on team create/join/detail sub-screens.
 
 ---
 

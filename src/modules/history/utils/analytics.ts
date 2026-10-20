@@ -23,6 +23,13 @@ export interface PauseAnalytics {
   triggers: TriggerBreakdown[];
 }
 
+export interface HistorySummary {
+  avoidedCigarettes: number;
+  moneySaved: number;
+  inventorySpending: number;
+  currency: string;
+}
+
 export function computeSuccessRate(resisted: number, total: number): number {
   if (!Number.isFinite(resisted) || !Number.isFinite(total) || total <= 0) {
     return 0;

@@ -6,7 +6,7 @@
 
 ## Summary
 
-Add local cigarette inventory tracking through an append-only `inventory_logs` table, a dedicated `/inventory` screen with stock summaries and low-inventory warnings, quick purchase and consumption actions, and Home financial integration. Movements store quantities in cigarettes; purchases collect packs and convert at 20 cigarettes per pack. All stock, days-remaining, and spending values are derived from logs and the profile using shared pure helpers, and the Home financial summary refreshes on focus.
+Add local cigarette inventory tracking through an append-only `inventory_logs` table, a dedicated `/inventory` screen with stock summaries and a non-alarming financial reflection, quick purchase and consumption actions, and Home financial integration. Movements store quantities in cigarettes; purchases collect packs and convert at 20 cigarettes per pack. All stock, days-remaining, and spending values are derived from logs and the profile using shared pure helpers, and the Home financial summary refreshes on focus.
 
 ## Technical Context
 
@@ -116,7 +116,7 @@ drizzle/
 3. **Queries**: `listInventoryLogs()` returns DESC by timestamp; `createInventoryLog(input)` performs a single Drizzle insert.
 4. **Shared summary**: `computeInventorySummary(logs, dailyCigarettes)` returns totals, clamped stock, packs, days remaining, low-stock, and spending. Reused by the inventory hook and dashboard metrics.
 5. **Inventory module**: Zod schemas for purchase (packs + optional cost) and consumption (cigarettes); pure mapper converts packs to cigarettes and timestamps to ISO. `useInventory` loads profile/logs on focus, manages a discriminated form `mode`, validates, blocks over-consumption, uses a `savingRef` guard, reloads on success, and toasts failures.
-6. **UI**: Dedicated screen shows stock cards, days remaining, low-stock banner, two quick actions, and one inline form at a time. Home gets an inventory action and an "inventario gastado" card.
+6. **UI**: Dedicated screen shows high-contrast stock cards, days remaining, a conscious financial reflection (never a low-inventory alert), two icon-led quick actions, and one inline form at a time. Home gets an inventory action and an "inventario gastado" card.
 7. **Home integration**: Extend `HomeMetrics.inventorySpending`; `computeHomeMetrics` accepts inventory logs and reuses the shared summary; `useHomeMetrics` also calls `listInventoryLogs()`.
 8. **Tests**: Cover summary math (purchase/consumption, packs, days, low-stock boundaries, spending, zero daily), purchase/consumption validation, pack conversion/ISO mapping, and Home spending.
 

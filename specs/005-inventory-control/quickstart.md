@@ -11,7 +11,7 @@ End-to-end validation guide. See `data-model.md` and `contracts/` for formulas a
 ## 1. Empty inventory
 
 1. Open `/inventory` with no inventory movements.
-2. **Expected**: 0 cigarettes, 0 packs, low/empty warning; days remaining shows 0 or unavailable depending on the daily average.
+2. **Expected**: 0 cigarettes, 0 packs, a conscious financial reflection (no low-inventory alert); days remaining shows 0 or unavailable depending on the daily average.
 
 ## 2. Purchase
 
@@ -32,12 +32,12 @@ End-to-end validation guide. See `data-model.md` and `contracts/` for formulas a
 3. Try to consume more cigarettes than the current stock.
 4. **Expected**: saving is blocked with a message; no row is inserted and stock does not go negative.
 
-## 5. Low-stock warning
+## 5. Conscious reflection
 
 1. Seed or record movements so stock lasts 3 days or less at the profile's daily average.
-2. **Expected**: the low-inventory warning is visible.
+2. **Expected**: a supportive financial reflection is visible, encouraging the person to avoid buying the next pack; no low-inventory alert is shown.
 3. Seed more than 3 days of stock.
-4. **Expected**: the warning is hidden.
+4. **Expected**: the reflection is hidden.
 
 ## 6. Validation and duplicate protection
 
@@ -65,7 +65,7 @@ npm test
 ## Success checklist
 
 - [ ] Stock/packs/days derive from logs and profile
-- [ ] Low-stock warning at <= 3 days or empty stock
+- [ ] Conscious reflection at <= 3 days or empty stock, with no low-inventory alert
 - [ ] Purchase converts packs to cigarettes and stores optional cost
 - [ ] Consumption saves and cannot exceed stock
 - [ ] Invalid inputs blocked with toasts

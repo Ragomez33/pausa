@@ -21,6 +21,9 @@ The root `Stack` already includes the team group; no new Stack entry is required
 - **R-DASH-5**: Show Guardián, Inquebrantable, and Resiliente cards with the winning member or an empty state.
 - **R-DASH-6**: Refresh on focus and after create/join.
 - **R-DASH-7**: Missing profile → onboarding redirect.
+- **R-DASH-8**: Home MUST expose an Equipo navigation item that routes to `/team`.
+- **R-DASH-9**: The main `/team` screen MUST use the persistent top tab bar with Equipo active and MUST NOT show a redundant back button.
+- **R-DASH-10**: The `/team/create`, `/team/join`, and `/team/[id]` sub-screens MUST show a back-arrow header with the section title; the arrow MUST call the router back action with a home fallback.
 
 ## Create-team contract
 

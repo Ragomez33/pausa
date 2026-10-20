@@ -6,25 +6,25 @@
 
 **Status**: Draft
 
-**Input**: User description: "Implementar el módulo de Control de Inventario de cigarrillos en la aplicación local-first, permitiendo al usuario llevar la trazabilidad de sus cajetillas y existencias actuales. Registrar movimientos de inventario (compra/consumo) con timestamp, tipo, cantidad y costo opcional. Mostrar stock actual de cigarrillos y cajetillas, consumo diario del perfil, días restantes y alerta de inventario bajo. Botón rápido 'Registrar Compra de Cajetilla' con unidades y costo opcional. Registrar consumos. Actualizar reactivamente las métricas financieras del Home. Todo local, sin red."
+**Input**: User description: "Implementar el módulo de Control de Inventario de cigarrillos en la aplicación local-first, permitiendo al usuario llevar la trazabilidad de sus cajetillas y existencias actuales. Registrar movimientos de inventario (compra/consumo) con timestamp, tipo, cantidad y costo opcional. Mostrar stock actual de cigarrillos y cajetillas, consumo diario del perfil y días restantes. Reemplazar la alerta de inventario bajo por una reflexión financiera no alarmista. Botón rápido 'Registrar Compra de Cajetilla' con unidades y costo opcional. Registrar consumos. Actualizar reactivamente las métricas financieras del Home. Todo local, sin red."
 
 ## User Scenarios & Testing *(mandatory)*
 
-### User Story 1 - See Current Stock and Low-Inventory Warning (Priority: P1)
+### User Story 1 - See Current Stock and a Conscious Reflection (Priority: P1)
 
-A person opens the inventory section and immediately sees how many cigarettes and full packs they currently have, how many days that supply is expected to last at their configured daily consumption, and a clear warning when the supply is running low.
+A person opens the inventory section and immediately sees how many cigarettes and full packs they currently have, how many days that supply is expected to last at their configured daily consumption, and a supportive financial reflection when the supply is running low.
 
-**Why this priority**: Knowing what is on hand is the core value of inventory control and the prerequisite for meaningful purchase or consumption actions.
+**Why this priority**: Knowing what is on hand is the core value of inventory control and the prerequisite for meaningful purchase or consumption actions. The reflection must reinforce the goal of reducing consumption instead of nudging the person to restock.
 
-**Independent Test**: Seed a profile with a known daily consumption and a known set of inventory movements, open the inventory view, and verify stock, packs, days remaining, and low-inventory warning match the stored records; change the records and confirm the view updates on return.
+**Independent Test**: Seed a profile with a known daily consumption and a known set of inventory movements, open the inventory view, and verify stock, packs, days remaining, and the conscious reflection match the stored records; change the records and confirm the view updates on return.
 
 **Acceptance Scenarios**:
 
-1. **Given** a profile and no inventory movements, **When** the inventory view opens, **Then** it shows 0 cigarettes, 0 packs, and a low/empty warning without crashing.
+1. **Given** a profile and no inventory movements, **When** the inventory view opens, **Then** it shows 0 cigarettes, 0 packs, and a non-alarming conscious reflection without crashing.
 2. **Given** purchases and consumptions that net to 45 cigarettes, **When** the inventory view opens, **Then** it shows 45 cigarettes and 2 full packs.
 3. **Given** 60 cigarettes in stock and a daily consumption of 20, **When** the inventory view opens, **Then** it shows approximately 3 days remaining.
-4. **Given** a supply that will last 3 days or less (or is empty), **When** the inventory view renders, **Then** a clear low-inventory warning is shown.
-5. **Given** the inventory view is open, **When** a movement is recorded, **Then** the stock, packs, days remaining, and warning refresh without an app restart.
+4. **Given** a supply that will last 3 days or less (or is empty), **When** the inventory view renders, **Then** a supportive reflection encourages avoiding the next pack purchase instead of showing a low-inventory alert.
+5. **Given** the inventory view is open, **When** a movement is recorded, **Then** the stock, packs, days remaining, and reflection refresh without an app restart.
 
 ---
 
@@ -67,13 +67,13 @@ The person records cigarettes consumed, and the stock decreases accordingly. Whe
 ### Edge Cases
 
 - What happens when no profile exists? The person MUST be routed to onboarding before using inventory.
-- What happens when daily consumption is zero? Days remaining MUST be shown as unavailable rather than dividing by zero; the low warning applies only when stock is empty.
+- What happens when daily consumption is zero? Days remaining MUST be shown as unavailable rather than dividing by zero; the reflection applies only when stock is empty.
 - What happens when a consumption exceeds available stock? The save MUST be blocked and stock MUST never become negative.
 - What happens when a purchase cost is empty? The purchase MUST still be recorded, with no addition to total spending.
 - What happens when a purchase cost is negative or non-numeric? The save MUST be blocked with a clear message.
 - What happens when a quantity is zero, negative, fractional, or non-numeric? The save MUST be blocked.
 - What happens when the same save action is triggered repeatedly? At most one movement per completed submission.
-- What happens when stock reaches exactly zero? The inventory view MUST show an empty state and low-inventory warning.
+- What happens when stock reaches exactly zero? The inventory view MUST show an empty state and a conscious reflection that discourages an automatic restock.
 - What happens when storage fails during a save? No partial movement may be stored, and a clear error MUST be shown.
 - What happens when the person switches away mid-form? Draft values may be discarded; no movement is stored until submit.
 
@@ -91,7 +91,7 @@ EARS-syntax requirements (per constitution section 4):
 - **FR-006** (Event-driven): WHEN a consumption is recorded, the system shall subtract its cigarette quantity from available stock.
 - **FR-007** (Ubiquitous): The system shall display current stock in cigarettes and the equivalent number of full packs.
 - **FR-008** (Ubiquitous): The system shall display estimated days remaining based on the profile's daily cigarette consumption.
-- **FR-009** (State-driven): WHILE the estimated supply is 3 days or less, or stock is empty, the system shall show a clear low-inventory warning.
+- **FR-009** (State-driven): WHILE the estimated supply is 3 days or less, or stock is empty, the system shall show a supportive financial reflection that encourages avoiding the next pack purchase without presenting an alarming low-inventory warning.
 - **FR-010** (Event-driven): WHEN the person taps "Registrar Compra de Cajetilla", the system shall present a form for pack count and optional cost.
 - **FR-011** (Event-driven): WHEN a valid purchase of N packs is saved, the system shall store a purchase movement whose quantity equals N packs converted to cigarettes.
 - **FR-012** (Event-driven): WHEN a valid consumption of N cigarettes is saved, the system shall store a consumption movement with that quantity.
@@ -105,6 +105,9 @@ EARS-syntax requirements (per constitution section 4):
 - **FR-020** (Event-driven): WHEN the home screen becomes visible after an inventory change, the system shall show current inventory spending.
 - **FR-021** (Ubiquitous): The system shall keep all inventory data on the device and shall not perform network calls or remote synchronization.
 - **FR-022** (Ubiquitous): The system shall retain every movement for traceability and derive current stock from those records rather than storing a mutable stock total as the source of truth.
+- **FR-023** (Ubiquitous): The inventory screen shall present high-contrast cards with rounded corners, subtle neon-accented borders, and consistent typography aligned with the dashboard.
+- **FR-024** (Ubiquitous): The inventory quick actions and forms shall use clear visual hierarchy, readable contrast, and touch targets of at least 44 points.
+- **FR-025** (Ubiquitous): The removal of the low-inventory alert and the visual redesign shall not alter inventory calculations, validation, persistence, or spending behavior.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -130,11 +133,12 @@ EARS-syntax requirements (per constitution section 4):
 - **SC-002**: A person can record a purchase or consumption in under 30 seconds from opening the corresponding action.
 - **SC-003**: 100% of valid purchases and consumptions are persisted and reflected in the inventory summary on the next view.
 - **SC-004**: 100% of attempts to consume more than available stock are blocked, with 0 cases of negative stock.
-- **SC-005**: The low-inventory warning appears in 100% of tested cases at 3 or fewer estimated days and when stock is empty, and does not appear when more than 3 days remain.
+- **SC-005**: The conscious reflection appears in 100% of tested cases at 3 or fewer estimated days and when stock is empty, and does not appear when more than 3 days remain; no low-inventory warning is displayed in any case.
 - **SC-006**: Repeated taps produce at most one stored movement in 100% of tested cases.
 - **SC-007**: After returning home from an inventory change, the financial summary reflects total inventory spending with 0 app restarts required.
 - **SC-008**: 100% of invalid quantity/cost submissions are blocked with a visible message, and 0 invalid movements are stored.
 - **SC-009**: 100% of inventory operations remain local, with 0 network requests.
+- **SC-010**: The inventory screen keeps its stock, spending, and reflection content readable without clipped labels at the supported phone widths.
 
 ## Clarification Gates
 
@@ -145,10 +149,10 @@ The constitution requires open product decisions to be stated before planning. T
    - Recommended default: Store every movement as a number of cigarettes. The purchase form collects whole packs and converts them using 20 cigarettes per pack; consumption collects cigarettes directly.
    - Alternative: Store packs for purchases and cigarettes for consumptions, requiring unit-aware summing everywhere.
 
-2. **Low-inventory threshold**
+2. **Conscious-reflection threshold**
    - Context: "Por agotarse" is not quantified.
-   - Recommended default: Warn when estimated days remaining is 3 or less, or when stock is empty. With daily consumption at zero, warn only when stock is empty.
-   - Alternative: Warn only below one full pack, or use a configurable user threshold.
+   - Recommended default: Show the financial reflection when estimated days remaining is 3 or less, or when stock is empty. With daily consumption at zero, show it only when stock is empty.
+   - Alternative: Show it below one full pack, or use a configurable user threshold.
 
 3. **Home financial meaning**
    - Context: The home currently shows estimated money saved from resisted impulses; the request asks to recalculate global financial metrics after inventory changes.
@@ -163,7 +167,8 @@ The constitution requires open product decisions to be stated before planning. T
 - Current stock is always derived from the movement log, never from a separately editable total.
 - Stock cannot go below zero; a consumption larger than the available stock is rejected.
 - Costs are optional for purchases. Missing costs do not count toward total spending; entered costs are non-negative.
-- The low-inventory threshold is 3 estimated days remaining, or empty stock.
+- The conscious-reflection threshold is 3 estimated days remaining, or empty stock.
+- The reflection never instructs the person to buy more cigarettes; it reinforces avoiding the next pack purchase.
 - The inventory summary refreshes when the screen gains focus and immediately after a successful save.
 - The home financial summary refreshes on focus, using the existing home refresh behavior.
 - Currency display uses the profile currency with a readable fallback for invalid codes.
