@@ -33,6 +33,8 @@ describe('nextPromptBoundary', () => {
 describe('buildSmokingEvent', () => {
   it('maps a completed session with an ISO timestamp and flags', () => {
     const result = buildSmokingEvent({
+      syncId: 'sync-1',
+      ownerUserId: null,
       nowMs: 1_000,
       triggerEmotion: 'anxiety_stress',
       durationSeconds: 305,
@@ -47,6 +49,8 @@ describe('buildSmokingEvent', () => {
 
   it('enforces a minimum one-second duration and false flag', () => {
     const result = buildSmokingEvent({
+      syncId: 'sync-2',
+      ownerUserId: null,
       nowMs: 2_000,
       triggerEmotion: 'habit',
       durationSeconds: 0,

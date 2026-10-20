@@ -1,9 +1,10 @@
 import { eq } from 'drizzle-orm';
 
 import { db } from '@/db/client';
-import { getProfile, listInventoryLogs } from '@/db/queries';
-import { activeSmokingSession, inventoryLogs, smokingEvents } from '@/db/schema';
+import { getProfile, listInventoryLogs, getScopedOwnerUserId } from '@/db/queries';
+import { activeSmokingSession, inventoryLogs, smokingEvents, type SmokingEvent } from '@/db/schema';
 import { computeInventorySummary } from '@/shared/utils/inventory';
+import { createSyncId } from '@/shared/utils/syncIds';
 import type { SmokingTrigger } from '@/shared/constants/smoking';
 
 import { buildSmokingEvent } from './session';
@@ -17,6 +18,7 @@ export interface CompleteSessionInput {
 
 export interface CompleteSessionResult {
   inventoryDecremented: boolean;
+  event: SmokingEvent | null;
   error: Error | null;
 }
 
@@ -29,18 +31,28 @@ export function completeSmokingSession(
     const summary = computeInventorySummary(logs, profile?.dailyCigarettes ?? 0);
     const inventoryDecremented = summary.stock > 0;
     const payload = buildSmokingEvent({
+      syncId: createSyncId(),
+      ownerUserId: getScopedOwnerUserId(),
       nowMs: input.nowMs,
       triggerEmotion: input.triggerEmotion,
       durationSeconds: input.durationSeconds,
       inventoryDecremented,
     });
 
+    let createdEvent: SmokingEvent | null = null;
+
     db.transaction((transaction) => {
-      transaction.insert(smokingEvents).values(payload).run();
+      createdEvent = transaction
+        .insert(smokingEvents)
+        .values(payload)
+        .returning()
+        .get();
       if (inventoryDecremented) {
         transaction
           .insert(inventoryLogs)
           .values({
+            syncId: createSyncId(),
+            ownerUserId: payload.ownerUserId,
             timestamp: payload.timestamp,
             actionType: 'consumption',
             quantity: 1,
@@ -58,10 +70,11 @@ export function completeSmokingSession(
       }
     });
 
-    return { inventoryDecremented, error: null };
+    return { inventoryDecremented, event: createdEvent, error: null };
   } catch (caught) {
     return {
       inventoryDecremented: false,
+      event: null,
       error: caught instanceof Error ? caught : new Error('No se pudo registrar la sesión.'),
     };
   }

@@ -5,6 +5,7 @@ import { useFocusEffect } from 'expo-router';
 import {
   createInventoryLog,
   getProfile,
+  getScopedOwnerUserId,
   listInventoryLogs,
   recordInventoryConsumption,
 } from '@/db/queries';
@@ -12,6 +13,13 @@ import { enqueueTeamSharedEvent } from '@/modules/team/sync/teamSync';
 import type { InventorySummary } from '@/shared/types/global';
 import { computeInventorySummary } from '@/shared/utils/inventory';
 import { resetIdleNotificationFromProfile } from '@/shared/utils/notifications';
+import { enqueuePersonalSync } from '@/shared/services/syncEngine';
+import { getBackupPreferences } from '@/shared/services/syncPreferences';
+import {
+  buildInventorySyncPayload,
+  buildSmokingSyncPayload,
+} from '@/shared/utils/personalSyncPayloads';
+import { createSyncId } from '@/shared/utils/syncIds';
 import { showAppToast } from '@/shared/utils/toast';
 
 import type { InventoryFormMode } from '../utils/constants';
@@ -131,6 +139,8 @@ export function useInventory(): UseInventoryResult {
     setSaving(true);
 
     const payload = buildInventoryLog({
+      syncId: createSyncId(),
+      ownerUserId: getScopedOwnerUserId(),
       timestamp: Date.now(),
       actionType: 'purchase',
       quantity: packsToCigarettes(Number(parsed.data.packs)),
@@ -138,7 +148,15 @@ export function useInventory(): UseInventoryResult {
     });
 
     try {
-      createInventoryLog(payload);
+      const createdLog = createInventoryLog(payload);
+      const ownerUserId = getScopedOwnerUserId();
+      if (ownerUserId !== null) {
+        enqueuePersonalSync(
+          'inventory_log',
+          createdLog.syncId,
+          buildInventorySyncPayload(createdLog, ownerUserId),
+        );
+      }
     } catch {
       savingRef.current = false;
       setSaving(false);
@@ -209,6 +227,8 @@ export function useInventory(): UseInventoryResult {
     }
 
     const payload = buildInventoryLog({
+      syncId: createSyncId(),
+      ownerUserId: getScopedOwnerUserId(),
       timestamp: Date.now(),
       actionType: 'consumption',
       quantity,
@@ -216,10 +236,26 @@ export function useInventory(): UseInventoryResult {
     });
 
     try {
-      recordInventoryConsumption({
+      const created = recordInventoryConsumption({
         timestampIso: payload.timestamp,
         quantity,
       });
+      const ownerUserId = getScopedOwnerUserId();
+      if (ownerUserId !== null) {
+        enqueuePersonalSync(
+          'inventory_log',
+          created.inventoryLog.syncId,
+          buildInventorySyncPayload(created.inventoryLog, ownerUserId),
+        );
+        const consentEmotions = getBackupPreferences().consentEmotions;
+        for (const smokingEvent of created.smokingEvents) {
+          enqueuePersonalSync(
+            'smoking_event',
+            smokingEvent.syncId,
+            buildSmokingSyncPayload(smokingEvent, ownerUserId, consentEmotions),
+          );
+        }
+      }
     } catch {
       savingRef.current = false;
       setSaving(false);

@@ -10,6 +10,7 @@ import m0005 from './0005_awareness_teams.sql';
 import m0006 from './0006_teams_challenges.sql';
 import m0007 from './0007_team_sync_outbox.sql';
 import m0008 from './0008_active_smoking_session.sql';
+import m0009 from './0009_personal_cloud_sync.sql';
 
 export default {
   journal,
@@ -23,5 +24,6 @@ export default {
     m0006,
     m0007,
     m0008,
+    m0009,
   },
 };

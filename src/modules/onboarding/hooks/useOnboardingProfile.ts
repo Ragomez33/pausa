@@ -1,8 +1,11 @@
 import { useCallback, useState } from 'react';
 
 import { db } from '@/db/client';
-import { getProfile } from '@/db/queries';
+import { getProfile, getScopedOwnerUserId } from '@/db/queries';
 import { userProfile } from '@/db/schema';
+import { enqueuePersonalSync } from '@/shared/services/syncEngine';
+import { getBackupPreferences } from '@/shared/services/syncPreferences';
+import { buildProfileSyncPayload } from '@/shared/utils/personalSyncPayloads';
 import type { ProfileFormValues } from '@/shared/types/global';
 import { showAppToast } from '@/shared/utils/toast';
 
@@ -45,10 +48,22 @@ export function useOnboardingProfile(): UseOnboardingProfileResult {
       return false;
     }
 
-    const payload = buildProfileFromForm(parsed.data, Date.now());
+    const payload = buildProfileFromForm(
+      parsed.data,
+      Date.now(),
+      getScopedOwnerUserId(),
+    );
 
     try {
-      db.insert(userProfile).values(payload).returning().get();
+      const created = db.insert(userProfile).values(payload).returning().get();
+      const ownerUserId = payload.ownerUserId;
+      if (typeof ownerUserId === 'string' && getBackupPreferences().backupEnabled) {
+        enqueuePersonalSync(
+          'profile',
+          ownerUserId,
+          buildProfileSyncPayload(created, ownerUserId),
+        );
+      }
     } catch {
       showAppToast({
         title: 'No se pudo guardar',

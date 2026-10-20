@@ -27,6 +27,8 @@ describe('parsePurchaseCost', () => {
 describe('buildInventoryLog', () => {
   it('builds a purchase log with an ISO timestamp and cost', () => {
     const result = buildInventoryLog({
+      syncId: 'sync-1',
+      ownerUserId: null,
       timestamp: 1_000,
       actionType: 'purchase',
       quantity: 40,
@@ -41,6 +43,8 @@ describe('buildInventoryLog', () => {
 
   it('stores null cost when omitted', () => {
     const result = buildInventoryLog({
+      syncId: 'sync-2',
+      ownerUserId: null,
       timestamp: 2_000,
       actionType: 'purchase',
       quantity: 20,
@@ -51,6 +55,8 @@ describe('buildInventoryLog', () => {
 
   it('builds a consumption log with null cost', () => {
     const result = buildInventoryLog({
+      syncId: 'sync-3',
+      ownerUserId: null,
       timestamp: 3_000,
       actionType: 'consumption',
       quantity: 10,

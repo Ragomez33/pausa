@@ -10,6 +10,8 @@ function log(
 ): InventoryLog {
   return {
     id,
+    syncId: `sync-${id}`,
+    ownerUserId: null,
     timestamp: new Date(id * 1_000).toISOString(),
     actionType,
     quantity,

@@ -23,6 +23,8 @@ export function nextPromptBoundary(elapsedSeconds: number): number {
 }
 
 export interface SmokingEventInput {
+  syncId: string;
+  ownerUserId: string | null;
   nowMs: number;
   triggerEmotion: SmokingTrigger;
   durationSeconds: number;
@@ -31,6 +33,8 @@ export interface SmokingEventInput {
 
 export function buildSmokingEvent(input: SmokingEventInput): NewSmokingEvent {
   return {
+    syncId: input.syncId,
+    ownerUserId: input.ownerUserId,
     timestamp: new Date(input.nowMs).toISOString(),
     triggerEmotion: input.triggerEmotion,
     durationSeconds: Math.max(1, Math.floor(input.durationSeconds)),

@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { useEffect, useState } from 'react';
 
-import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
+import { Redirect, useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
 import { Cigarette } from '@/shared/components/icons';
 import { MainTabBar } from '@/shared/components/MainTabBar';
@@ -10,6 +10,7 @@ import { THEME_COLORS } from '@/shared/constants/theme';
 import { formatElapsedDuration } from '@/shared/utils/utils';
 
 import { useBadgeEvaluation } from '@/modules/badges/hooks/useBadgeEvaluation';
+import { usePersonalSyncSnapshot } from '@/shared/hooks/usePersonalSync';
 
 import { useHomeMetrics } from '../hooks/useHomeMetrics';
 import { getFeedbackMessage } from '../utils/feedback';
@@ -38,6 +39,7 @@ export function DashboardScreen(): ReactElement {
   const feedbackParam = typeof params.feedback === 'string' ? params.feedback : undefined;
   const [banner, setBanner] = useState<string | null>(null);
   const { loading, hasProfile, metrics, error } = useHomeMetrics();
+  const personalSync = usePersonalSyncSnapshot();
   useBadgeEvaluation();
 
   useEffect(() => {
@@ -88,12 +90,37 @@ export function DashboardScreen(): ReactElement {
         </View>
       ) : null}
 
+      <TouchableOpacity
+        onPress={() => router.push('/account' as Href)}
+        activeOpacity={0.82}
+        className="mt-4 flex-row items-center justify-between rounded-2xl border border-border-card bg-card px-4 py-3"
+      >
+        <View>
+          <Text className="text-[10px] font-black uppercase tracking-[0.18em] text-text-secondary">
+            Respaldo personal
+          </Text>
+          <Text className="mt-0.5 text-xs font-semibold text-text-primary">
+            {personalSync.status === 'disabled'
+              ? 'Solo en este dispositivo'
+              : personalSync.status === 'synced'
+                ? 'Sincronizado'
+                : personalSync.status === 'syncing'
+                  ? 'Sincronizando'
+                  : personalSync.status === 'offline'
+                    ? 'Sin conexión'
+                    : personalSync.status === 'error'
+                      ? 'Revisar respaldo'
+                      : `${personalSync.pendingCount} pendientes`}
+          </Text>
+        </View>
+        <Text className="text-xs font-bold text-accent-strong">Cuenta</Text>
+      </TouchableOpacity>
+
       <View className="mt-5 flex-row gap-3">
         <View
           className="flex-1 rounded-3xl border border-border-card bg-card p-5"
           style={CARD_SHADOW}
-        >
-          <Text className="text-[10px] font-bold uppercase tracking-[0.18em] text-text-secondary">
+        >          <Text className="text-[10px] font-bold uppercase tracking-[0.18em] text-text-secondary">
             Racha actual
           </Text>
           <Text className="mt-2 text-3xl font-black tracking-tight text-text-primary">

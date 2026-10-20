@@ -1,10 +1,17 @@
 import { useCallback, useRef, useState } from 'react';
 
-import { recordPostponedPause } from '@/db/queries';
+import type { PauseEvent } from '@/db/schema';
+import {
+  getScopedOwnerUserId,
+  recordPostponedPause,
+} from '@/db/queries';
 import { AWARENESS_MESSAGES } from '@/shared/constants/messages';
 import { enqueueTeamSharedEvent } from '@/modules/team/sync/teamSync';
 import { SMOKING_TRIGGER_LABELS, type SmokingTrigger } from '@/shared/constants/smoking';
 import { resetIdleNotificationFromProfile } from '@/shared/utils/notifications';
+import { enqueuePersonalSync } from '@/shared/services/syncEngine';
+import { getBackupPreferences } from '@/shared/services/syncPreferences';
+import { buildPauseSyncPayload } from '@/shared/utils/personalSyncPayloads';
 import { showAppToast } from '@/shared/utils/toast';
 
 import type { AwarenessStep } from '../utils/constants';
@@ -33,8 +40,9 @@ export function useAwarenessLoop(): UseAwarenessLoopResult {
     }
     savingRef.current = true;
 
+    let pauseEvent: PauseEvent;
     try {
-      recordPostponedPause(new Date().toISOString());
+      pauseEvent = recordPostponedPause(new Date().toISOString());
     } catch {
       savingRef.current = false;
       showAppToast({
@@ -43,6 +51,19 @@ export function useAwarenessLoop(): UseAwarenessLoopResult {
         action: 'error',
       });
       return false;
+    }
+
+    const ownerUserId = getScopedOwnerUserId();
+    if (ownerUserId !== null) {
+      enqueuePersonalSync(
+        'smoking_event',
+        pauseEvent.syncId,
+        buildPauseSyncPayload(
+          pauseEvent,
+          ownerUserId,
+          getBackupPreferences().consentEmotions,
+        ),
+      );
     }
 
     void resetIdleNotificationFromProfile();

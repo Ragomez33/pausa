@@ -1,4 +1,4 @@
-import type { UserProfile } from '@/db/schema';
+import type { UserBadge, UserProfile } from '@/db/schema';
 import {
   getLatestCededTimestamp,
   getPauseTotals,
@@ -20,6 +20,7 @@ import {
 
 export interface BadgeEvaluationOutcome {
   newBadges: BadgeDefinition[];
+  newBadgeRows: UserBadge[];
   error: Error | null;
 }
 
@@ -45,7 +46,7 @@ export function evaluateAndUnlockBadges(nowMs: number): BadgeEvaluationOutcome {
   try {
     const profile = getProfile();
     if (profile === null) {
-      return { newBadges: [], error: null };
+      return { newBadges: [], newBadgeRows: [], error: null };
     }
 
     const totals = getPauseTotals();
@@ -55,19 +56,23 @@ export function evaluateAndUnlockBadges(nowMs: number): BadgeEvaluationOutcome {
     const { newKeys } = evaluateBadges(state, unlockedKeys);
 
     if (newKeys.length === 0) {
-      return { newBadges: [], error: null };
+      return { newBadges: [], newBadgeRows: [], error: null };
     }
 
     const unlockedAt = new Date(nowMs).toISOString();
-    unlockBadges(newKeys.map((badgeKey) => ({ badgeKey, unlockedAt })));
+    const newBadgeRows = unlockBadges(
+      newKeys.map((badgeKey) => ({ badgeKey, unlockedAt })),
+    );
 
     return {
       newBadges: BADGE_CATALOG.filter((definition) => newKeys.includes(definition.key)),
+      newBadgeRows,
       error: null,
     };
   } catch (caught) {
     return {
       newBadges: [],
+      newBadgeRows: [],
       error: caught instanceof Error ? caught : new Error('No se pudieron evaluar los logros.'),
     };
   }

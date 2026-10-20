@@ -7,6 +7,8 @@ export const userProfile = sqliteTable('user_profile', {
   currency: text('currency').notNull(),
   quitGoal: text('quit_goal').notNull(),
   createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+  ownerUserId: text('owner_user_id'),
   postponedCount: integer('postponed_count').notNull().default(0),
 });
 
@@ -39,24 +41,34 @@ export const inventoryLogs = sqliteTable(
   'inventory_logs',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
+    syncId: text('sync_id').notNull(),
+    ownerUserId: text('owner_user_id'),
     timestamp: text('timestamp').notNull(),
     actionType: text('action_type').notNull(),
     quantity: integer('quantity').notNull(),
     cost: real('cost'),
   },
-  (table) => [index('idx_inventory_logs_timestamp').on(table.timestamp)],
+  (table) => [
+    index('idx_inventory_logs_timestamp').on(table.timestamp),
+    uniqueIndex('idx_inventory_logs_sync_id').on(table.syncId),
+  ],
 );
 
 export const smokingEvents = sqliteTable(
   'smoking_events',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
+    syncId: text('sync_id').notNull(),
+    ownerUserId: text('owner_user_id'),
     timestamp: text('timestamp').notNull(),
     triggerEmotion: text('trigger_emotion').notNull(),
     durationSeconds: integer('duration_seconds').notNull(),
     inventoryDecremented: integer('inventory_decremented').notNull(),
   },
-  (table) => [index('idx_smoking_events_timestamp').on(table.timestamp)],
+  (table) => [
+    index('idx_smoking_events_timestamp').on(table.timestamp),
+    uniqueIndex('idx_smoking_events_sync_id').on(table.syncId),
+  ],
 );
 
 export const activeSmokingSession = sqliteTable('active_smoking_session', {
@@ -120,23 +132,58 @@ export const userBadges = sqliteTable(
   'user_badges',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
+    syncId: text('sync_id').notNull(),
+    ownerUserId: text('owner_user_id'),
     badgeKey: text('badge_key').notNull(),
     unlockedAt: text('unlocked_at').notNull(),
   },
-  (table) => [uniqueIndex('idx_user_badges_badge_key').on(table.badgeKey)],
+  (table) => [
+    uniqueIndex('idx_user_badges_owner_badge').on(table.ownerUserId, table.badgeKey),
+    uniqueIndex('idx_user_badges_sync_id').on(table.syncId),
+  ],
 );
 
 export const pauseEvents = sqliteTable(
   'pause_events',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
+    syncId: text('sync_id').notNull(),
+    ownerUserId: text('owner_user_id'),
     timestamp: text('timestamp').notNull(),
     triggerEmotion: text('trigger_emotion').notNull(),
     resisted: integer('resisted').notNull(),
     notes: text('notes'),
   },
-  (table) => [index('idx_pause_events_timestamp').on(table.timestamp)],
+  (table) => [
+    index('idx_pause_events_timestamp').on(table.timestamp),
+    uniqueIndex('idx_pause_events_sync_id').on(table.syncId),
+  ],
 );
+
+export const globalSyncOutbox = sqliteTable(
+  'global_sync_outbox',
+  {
+    id: text('id').primaryKey(),
+    entityType: text('entity_type').notNull(),
+    entityId: text('entity_id').notNull(),
+    payload: text('payload').notNull(),
+    status: text('status').notNull(),
+    attempts: integer('attempts').notNull().default(0),
+    lastError: text('last_error'),
+    createdAt: text('created_at').notNull(),
+    updatedAt: text('updated_at').notNull(),
+  },
+  (table) => [
+    uniqueIndex('idx_global_sync_outbox_entity').on(table.entityType, table.entityId),
+    index('idx_global_sync_outbox_status').on(table.status, table.createdAt),
+  ],
+);
+
+export const syncState = sqliteTable('sync_state', {
+  key: text('key').primaryKey(),
+  value: text('value').notNull(),
+  updatedAt: text('updated_at').notNull(),
+});
 
 export type UserProfile = typeof userProfile.$inferSelect;
 export type NewUserProfile = typeof userProfile.$inferInsert;
@@ -160,3 +207,7 @@ export type TeamMember = typeof teamMembers.$inferSelect;
 export type NewTeamMember = typeof teamMembers.$inferInsert;
 export type TeamEventOutbox = typeof teamEventOutbox.$inferSelect;
 export type NewTeamEventOutbox = typeof teamEventOutbox.$inferInsert;
+export type GlobalSyncOutbox = typeof globalSyncOutbox.$inferSelect;
+export type NewGlobalSyncOutbox = typeof globalSyncOutbox.$inferInsert;
+export type SyncState = typeof syncState.$inferSelect;
+export type NewSyncState = typeof syncState.$inferInsert;

@@ -11,14 +11,18 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useTeamSync } from '@/modules/team/sync/useTeamSync';
 import { THEME_COLORS } from '@/shared/constants/theme';
+import { useAuthSession } from '@/shared/hooks/useAuthSession';
 import { useDatabaseInitialized } from '@/shared/hooks/useDatabaseInitialized';
 import { useIdleNotifications } from '@/shared/hooks/useIdleNotifications';
+import { usePersonalSync } from '@/shared/hooks/usePersonalSync';
 import { configureNotificationHandler } from '@/shared/utils/notifications';
 import { shouldRedirectToOnboarding } from '@/shared/utils/routing';
 import { readSmokingSessionNotificationData } from '@/shared/utils/sessionPromptSchedule';
 
 export default function RootLayout(): ReactElement {
   const { ready, hasProfile, error, refresh } = useDatabaseInitialized();
+  useAuthSession(ready);
+  usePersonalSync(ready);
   useIdleNotifications(ready, hasProfile);
   useTeamSync(ready);
   const router = useRouter();
@@ -115,6 +119,8 @@ export default function RootLayout(): ReactElement {
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="pause" />
             <Stack.Screen name="smoking-session" />
+            <Stack.Screen name="account" />
+            <Stack.Screen name="auth/callback" options={{ animation: 'none' }} />
             <Stack.Screen name="onboarding" />
             <Stack.Screen name="team" />
           </Stack>

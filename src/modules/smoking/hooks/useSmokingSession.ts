@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   clearActiveSmokingSession,
   getActiveSmokingSession,
+  getScopedOwnerUserId,
   startActiveSmokingSession,
 } from '@/db/queries';
 import type { ActiveSmokingSession } from '@/db/schema';
@@ -15,6 +16,9 @@ import {
   resetIdleNotificationFromProfile,
   scheduleSessionPrompts,
 } from '@/shared/utils/notifications';
+import { enqueuePersonalSync } from '@/shared/services/syncEngine';
+import { getBackupPreferences } from '@/shared/services/syncPreferences';
+import { buildSmokingSyncPayload } from '@/shared/utils/personalSyncPayloads';
 import {
   createSessionId,
   shouldOfferStaleSession,
@@ -183,6 +187,18 @@ export function useSmokingSession(
     sessionRef.current = null;
     setStaleSession(false);
     setFinishing(false);
+    const ownerUserId = getScopedOwnerUserId();
+    if (ownerUserId !== null && result.event !== null) {
+      enqueuePersonalSync(
+        'smoking_event',
+        result.event.syncId,
+        buildSmokingSyncPayload(
+          result.event,
+          ownerUserId,
+          getBackupPreferences().consentEmotions,
+        ),
+      );
+    }
     void cancelSessionPrompts();
     void resetIdleNotificationFromProfile();
     enqueueTeamSharedEvent('smoked');

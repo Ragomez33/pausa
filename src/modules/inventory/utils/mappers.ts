@@ -16,6 +16,8 @@ export function parsePurchaseCost(cost: string): number | null {
 }
 
 export interface InventoryLogInput {
+  syncId: string;
+  ownerUserId: string | null;
   timestamp: number;
   actionType: InventoryActionType;
   quantity: number;
@@ -24,6 +26,8 @@ export interface InventoryLogInput {
 
 export function buildInventoryLog(input: InventoryLogInput): NewInventoryLog {
   return {
+    syncId: input.syncId,
+    ownerUserId: input.ownerUserId,
     timestamp: new Date(input.timestamp).toISOString(),
     actionType: input.actionType,
     quantity: input.quantity,

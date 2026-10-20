@@ -24,6 +24,8 @@ function profile(overrides: Partial<UserProfile> = {}): UserProfile {
     currency: 'USD',
     quitGoal: 'Salud',
     createdAt: '2026-10-01T00:00:00.000Z',
+    updatedAt: '2026-10-01T00:00:00.000Z',
+    ownerUserId: null,
     postponedCount: 0,
     ...overrides,
   };
@@ -32,6 +34,8 @@ function profile(overrides: Partial<UserProfile> = {}): UserProfile {
 function event(id: number, resisted: boolean, offsetDays: number): PauseEvent {
   return {
     id,
+    syncId: `sync-${id}`,
+    ownerUserId: null,
     timestamp: new Date(PROFILE_START + offsetDays * DAY_MS).toISOString(),
     triggerEmotion: 'anxiety',
     resisted: resisted ? 1 : 0,
@@ -47,6 +51,8 @@ function inventoryLog(
 ): InventoryLog {
   return {
     id,
+    syncId: `sync-${id}`,
+    ownerUserId: null,
     timestamp: new Date(PROFILE_START + id * 1_000).toISOString(),
     actionType,
     quantity,

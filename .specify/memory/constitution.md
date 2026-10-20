@@ -1,30 +1,23 @@
 <!--
 Sync Impact Report
 ==================
-Version change: (unversioned scaffold) → 1.0.0
-Bump rationale: Initial adoption — the placeholder template is replaced by the
-  project-specific Pausa constitution, aligned with the authoritative root
-  constitution.md. Treated as the first ratified version (1.0.0).
+Version change: 1.0.0 → 1.1.0
+Bump rationale: MINOR amendment — adds the opt-in personal cloud backup policy,
+  updates the privacy isolation rule to allow explicit consent, and registers the
+  authentication/RLS and conflict-resolution invariants approved for feature 013.
 
 Modified principles / sections:
-  - PRINCIPLE_1..5 placeholders → consolidated architecture/governance sections
-  - [SECTION_2_NAME]/[SECTION_3_NAME] → concrete project sections
+  - §3 Estado Local, Persistencia y Privacidad — privacy default clarified and
+    personal cloud backup policy added.
 Added sections:
-  - 1. Principios de Arquitectura y Estructura de Proyecto
-  - 2. Estándares de Código y TypeScript
-  - 3. Estado Local, Persistencia y Privacidad
-  - 4. Sintaxis de Especificaciones EARS
-  - 5. Flujo de Trabajo y Gobernanza SDD para el Agente (OpenCode)
-  - Governance (amendment procedure + versioning policy)
-Removed sections:
-  - Template placeholder examples and HTML guidance comments
+  - §3 Respaldo Personal en la Nube (Opt-In)
 Deferred TODOs:
   - None
 -->
 
 # Pausa Project Constitution
 
-- **Versión:** 1.0.0
+- **Versión:** 1.1.0
 - **Proyecto:** Pausa
 - **Metodología:** Spec-Driven Development (SDD) con Sintaxis EARS
 - **Sistemas Afectados:** Frontend Mobile (Expo v54, React Native 0.81, Expo Router v6)
@@ -99,7 +92,8 @@ Todo código generado, refactorizado o auditado debe cumplir con las reglas defi
 ## 3. Estado Local, Persistencia y Privacidad
 
 - **Persistencia Relacional Local-First:** La persistencia de datos en Pausa se gestiona de forma nativa mediante Drizzle ORM y `expo-sqlite`. Toda lectura/escritura de registros de consumo (logs de cigarrillos, eventos de posposición, compras de paquetes, metas activas) **MUST** realizarse a través de la capa Drizzle sobre SQLite; queda prohibido el uso de almacenamiento clave-valor (AsyncStorage) para entidades del dominio.
-- **Aislamiento de Privacidad:** La información emocional del usuario (razones por las que fuma: ansiedad, aburrimiento, tristeza, etc.) y las bitácoras individuales deben permanecer 100% locales en el dispositivo.
+- **Aislamiento de Privacidad por Defecto:** La información emocional del usuario (razones por las que fuma: ansiedad, aburrimiento, tristeza, etc.) y las bitácoras individuales permanecen 100% locales por defecto. Su respaldo en la nube es estrictamente opt-in y requiere consentimiento explícito del usuario.
+- **Respaldo Personal en la Nube (Opt-In):** El usuario autenticado puede activar un respaldo personal de perfil, eventos, inventario y logros. El respaldo está desactivado por defecto, se ejecuta de forma asíncrona y nunca bloquea la lectura/escritura local. SQLite sigue siendo la fuente única de verdad para la UI. Los eventos históricos son append-only e idempotentes por UUID; el perfil usa la estrategia "última edición local gana" mediante `updated_at`; el borrado remoto queda fuera del alcance del MVP.
 - **Sincronización de Equipos (Teams):** Únicamente se sincronizarán con servicios de backend las métricas agregadas del equipo (cigarrillos pospuestos acumulados, nivel de meta activo, cumplimiento del día y racha de días).
 
 ---
@@ -215,4 +209,4 @@ es: `constitution.md` → `code-rules.md` → `specs/<feature>/`.
 - **Revisión de Cumplimiento:** Todo código generado, refactorizado o auditado debe verificar el
   cumplimiento de esta constitución y de `code-rules.md`; la complejidad añadida debe justificarse.
 
-**Version**: 1.0.0 | **Ratified**: 2026-10-18 | **Last Amended**: 2026-10-18
+**Version**: 1.1.0 | **Ratified**: 2026-10-18 | **Last Amended**: 2026-10-20

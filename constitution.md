@@ -1,6 +1,6 @@
 # Pausa Project Constitution
 
-- **Versión:** 1.0.0
+- **Versión:** 1.1.0
 - **Proyecto:** Pausa
 - **Metodología:** Spec-Driven Development (SDD) con Sintaxis EARS
 - **Sistemas Afectados:** Frontend Mobile (Expo v54, React Native 0.81, Expo Router v6)
@@ -75,7 +75,8 @@ Todo código generado, refactorizado o auditado debe cumplir con las reglas defi
 ## 3. Estado Local, Persistencia y Privacidad
 
 - **Persistencia Relacional Local-First:** La persistencia de datos en Pausa se gestiona de forma nativa mediante Drizzle ORM y `expo-sqlite`. Toda lectura/escritura de registros de consumo (logs de cigarrillos, eventos de posposición, compras de paquetes, metas activas) **MUST** realizarse a través de la capa Drizzle sobre SQLite; queda prohibido el uso de almacenamiento clave-valor (AsyncStorage) para entidades del dominio.
-- **Aislamiento de Privacidad:** La información emocional del usuario (razones por las que fuma: ansiedad, aburrimiento, tristeza, etc.) y las bitácoras individuales deben permanecer 100% locales en el dispositivo.
+- **Aislamiento de Privacidad por Defecto:** La información emocional del usuario (razones por las que fuma: ansiedad, aburrimiento, tristeza, etc.) y las bitácoras individuales permanecen 100% locales por defecto. Su respaldo en la nube es estrictamente opt-in y requiere consentimiento explícito del usuario.
+- **Respaldo Personal en la Nube (Opt-In):** El usuario autenticado puede activar un respaldo personal de perfil, eventos, inventario y logros. El respaldo está desactivado por defecto, se ejecuta de forma asíncrona y nunca bloquea la lectura/escritura local. SQLite sigue siendo la fuente única de verdad para la UI. Los eventos históricos son append-only e idempotentes por UUID; el perfil usa la estrategia "última edición local gana" mediante `updated_at`; el borrado remoto queda fuera del alcance del MVP.
 - **Sincronización de Equipos (Teams):** Únicamente se sincronizarán con servicios de backend las métricas agregadas del equipo (cigarrillos pospuestos acumulados, nivel de meta activo, cumplimiento del día y racha de días).
 
 ---

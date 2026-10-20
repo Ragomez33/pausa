@@ -13,6 +13,8 @@ import {
 function pauseEvent(overrides: Partial<PauseEvent> = {}): PauseEvent {
   return {
     id: 1,
+    syncId: 'sync-pause-1',
+    ownerUserId: null,
     timestamp: '2026-10-19T10:30:00.000Z',
     triggerEmotion: 'anxiety',
     resisted: 1,
@@ -24,6 +26,8 @@ function pauseEvent(overrides: Partial<PauseEvent> = {}): PauseEvent {
 function smokingEvent(overrides: Partial<SmokingEvent> = {}): SmokingEvent {
   return {
     id: 1,
+    syncId: 'sync-smoking-1',
+    ownerUserId: null,
     timestamp: '2026-10-19T11:30:00.000Z',
     triggerEmotion: 'habit',
     durationSeconds: 300,

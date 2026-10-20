@@ -5,6 +5,9 @@ import { useFocusEffect } from 'expo-router';
 import type { BadgeDefinition } from '../utils/catalog';
 import { formatUnlockMessage } from '../utils/feedback';
 import { evaluateAndUnlockBadges } from '../utils/service';
+import { getScopedOwnerUserId } from '@/db/queries';
+import { enqueuePersonalSync } from '@/shared/services/syncEngine';
+import { buildAchievementSyncPayload } from '@/shared/utils/personalSyncPayloads';
 import { showAppToast } from '@/shared/utils/toast';
 
 export interface UseBadgeEvaluationResult {
@@ -21,6 +24,17 @@ export function useBadgeEvaluation(): UseBadgeEvaluationResult {
     const outcome = evaluateAndUnlockBadges(Date.now());
     setNewBadges(outcome.newBadges);
     setError(outcome.error);
+
+    const ownerUserId = getScopedOwnerUserId();
+    if (ownerUserId !== null) {
+      for (const badge of outcome.newBadgeRows) {
+        enqueuePersonalSync(
+          'achievement',
+          badge.syncId,
+          buildAchievementSyncPayload(badge, ownerUserId),
+        );
+      }
+    }
 
     const message = formatUnlockMessage(outcome.newBadges);
     if (message !== null) {
