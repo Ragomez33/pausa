@@ -12,6 +12,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useTeamSync } from '@/modules/team/sync/useTeamSync';
 import { THEME_COLORS } from '@/shared/constants/theme';
 import { useAuthSession } from '@/shared/hooks/useAuthSession';
+import { useAppUpdates } from '@/shared/hooks/useAppUpdates';
 import { useDatabaseInitialized } from '@/shared/hooks/useDatabaseInitialized';
 import { useIdleNotifications } from '@/shared/hooks/useIdleNotifications';
 import { usePersonalSync } from '@/shared/hooks/usePersonalSync';
@@ -21,6 +22,7 @@ import { readSmokingSessionNotificationData } from '@/shared/utils/sessionPrompt
 
 export default function RootLayout(): ReactElement {
   const { ready, hasProfile, error, refresh } = useDatabaseInitialized();
+  useAppUpdates();
   useAuthSession(ready);
   usePersonalSync(ready);
   useIdleNotifications(ready, hasProfile);
