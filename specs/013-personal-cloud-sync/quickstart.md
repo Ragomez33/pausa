@@ -130,5 +130,8 @@ npm test
 - 2026-10-20: `0002_personal_data_sync.sql` applied to the remote project with
   `supabase db push`. Cross-account RLS denial must still be exercised with two
   authenticated sessions; the SQL policies are in place.
+- 2026-10-20: `0003_personal_data_grants.sql` applied. The tables had RLS policies but the
+  `authenticated` role lacked table grants, causing PostgREST `42501 permission denied`.
+  Verified `SELECT/INSERT/UPDATE` grants and `auth.uid()` policies for all four personal tables.
 - Device/emulator scenarios remain pending until an Email Auth redirect is configured
   and a native rebuild includes `expo-secure-store`.

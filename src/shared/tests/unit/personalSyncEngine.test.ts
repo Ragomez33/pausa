@@ -54,6 +54,7 @@ const mockedPendingCount = countPendingPersonalSyncItems as jest.Mock;
 const mockedPrefs = getBackupPreferences as jest.Mock;
 
 const upsert = jest.fn();
+const getUser = jest.fn();
 const from = jest.fn(() => ({ upsert }));
 
 const payload: RemoteSmokingEventPayload = {
@@ -73,12 +74,14 @@ describe('personal sync engine', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockedConfigured.mockReturnValue(true);
-    mockedClient.mockReturnValue({ from });
+    mockedClient.mockReturnValue({ from, auth: { getUser } });
     mockedAuth.mockReturnValue({ status: 'authenticated', userId: 'user-1', email: null, error: null });
     mockedActive.mockReturnValue(true);
     mockedOwner.mockReturnValue('user-1');
     mockedPrefs.mockReturnValue({ backupEnabled: true, consentEmotions: false });
     mockedPendingCount.mockReturnValue(0);
+    mockedList.mockReturnValue([]);
+    getUser.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null });
     upsert.mockResolvedValue({ error: null });
   });
 
@@ -114,7 +117,7 @@ describe('personal sync engine', () => {
       },
     ]);
 
-    const snapshot = await flushPersonalOutbox();
+    const snapshot = await flushPersonalOutbox(true);
 
     expect(upsert).toHaveBeenCalledWith(payload, { onConflict: 'id' });
     expect(mockedSent).toHaveBeenCalledWith('outbox-1');
@@ -136,10 +139,33 @@ describe('personal sync engine', () => {
       },
     ]);
 
-    await flushPersonalOutbox();
+    await flushPersonalOutbox(true);
 
     expect(upsert).not.toHaveBeenCalled();
     expect(mockedSent).not.toHaveBeenCalledWith('outbox-2');
+  });
+
+  it('injects the authenticated user_id when a legacy payload lacks it', async () => {
+    mockedList.mockReturnValue([
+      {
+        id: 'outbox-5',
+        entityType: 'smoking_event',
+        entityId: 'event-5',
+        payload: JSON.stringify({ id: 'event-5', event_type: 'paused' }),
+        status: 'pending',
+        attempts: 0,
+        lastError: null,
+        createdAt: '2026-10-01T00:00:00.000Z',
+        updatedAt: '2026-10-01T00:00:00.000Z',
+      },
+    ]);
+
+    await flushPersonalOutbox(true);
+
+    expect(upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'event-5', user_id: 'user-1' }),
+      { onConflict: 'id' },
+    );
   });
 
   it('keeps failed rows and reports an offline status', async () => {
@@ -159,9 +185,9 @@ describe('personal sync engine', () => {
     upsert.mockResolvedValueOnce({ error: { code: 'NETWORK', message: 'network down' } });
     mockedPendingCount.mockReturnValue(1);
 
-    const snapshot = await flushPersonalOutbox();
+    const snapshot = await flushPersonalOutbox(true);
 
-    expect(mockedFailed).toHaveBeenCalledWith('outbox-3', 'network down');
+    expect(mockedFailed).toHaveBeenCalledWith('outbox-3', 'NETWORK: network down');
     expect(snapshot.status).toBe('offline');
   });
 
@@ -182,7 +208,7 @@ describe('personal sync engine', () => {
     upsert.mockResolvedValueOnce({ error: { code: '42501', message: 'row-level security policy' } });
     mockedPendingCount.mockReturnValue(1);
 
-    const snapshot = await flushPersonalOutbox();
+    const snapshot = await flushPersonalOutbox(true);
 
     expect(snapshot.status).toBe('error');
   });

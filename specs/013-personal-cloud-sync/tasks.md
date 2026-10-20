@@ -131,6 +131,7 @@
 - [X] T046 [US3] Wire consent into `src/shared/services/syncEngine.ts` and `src/shared/utils/personalSyncPayloads.ts` so `backup_enabled=false` stops enqueue/flush and `consent_emotions=false` omits `trigger_emotion` and `notes`.
 - [X] T047 [US3] Apply `supabase/migrations/0002_personal_data_sync.sql` to the project and validate in Supabase that RLS denies cross-account select/insert/update; record the evidence in `specs/013-personal-cloud-sync/quickstart.md` notes.
   - _Applied with `supabase db push` on 2026-10-20. Cross-account RLS checks still need to be run with two authenticated sessions._
+  - _Fixed missing table grants with `0003_personal_data_grants.sql`; verified `authenticated` has SELECT/INSERT/UPDATE and RLS uses `auth.uid()`._
 - [X] T048 [US3] Run `npm run typecheck` and `npm test` using `package.json`; fix all failures before closing US3.
 
 **Checkpoint**: US3 is independently functional — guest mode, consent, and account isolation are enforced.
@@ -169,6 +170,7 @@
 - [X] T057 Run `npm run lint`, `npm run typecheck`, and `npm test` from `package.json`; confirm 0 errors and 0 failing tests.
 - [X] T058 Validate `drizzle/0009_personal_cloud_sync.sql` and `supabase/migrations/0002_personal_data_sync.sql` with `node:sqlite` (local) and the Supabase SQL editor/CLI (remote); record results.
   - _Local 0000–0009 validated with `node:sqlite`. Remote `0002` applied successfully with `supabase db push` on 2026-10-20._
+  - _Remote `0003_personal_data_grants.sql` applied and grants verified via the linked database._
 - [ ] T059 Execute all scenarios in `specs/013-personal-cloud-sync/quickstart.md` on at least two devices/emulators (guest, magic link, offline queue, partial failure, restore, LWW, account isolation, disable/sign-out, misconfiguration).
   - _Pending: requires physical devices/emulators, Email Auth redirect configuration, and the remote 0002 migration._
 - [X] T060 Run `git status` for `src/`, `app/`, `drizzle/`, `supabase/`, and `specs/013-personal-cloud-sync/`; summarize changed files and present the suggested commit command for user confirmation (constitution §5.9). Do NOT commit or push automatically.

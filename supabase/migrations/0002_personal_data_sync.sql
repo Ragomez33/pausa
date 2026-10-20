@@ -51,6 +51,14 @@ alter table public.smoking_events enable row level security;
 alter table public.inventory_logs enable row level security;
 alter table public.user_achievements enable row level security;
 
+-- Table privileges are separate from RLS. Without these grants PostgREST returns
+-- 42501 "permission denied" before evaluating the auth.uid() policies.
+grant usage on schema public to authenticated;
+grant select, insert, update on public.user_profiles to authenticated;
+grant select, insert, update on public.smoking_events to authenticated;
+grant select, insert, update on public.inventory_logs to authenticated;
+grant select, insert, update on public.user_achievements to authenticated;
+
 drop policy if exists "user_profiles_select_own" on public.user_profiles;
 create policy "user_profiles_select_own" on public.user_profiles
   for select using (auth.uid() = id);

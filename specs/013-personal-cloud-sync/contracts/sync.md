@@ -146,3 +146,6 @@ Rules:
 - **SYNC-6**: Emotional fields require explicit consent at payload-build time.
 - **SYNC-7**: Restore must be idempotent and resumable.
 - **SYNC-8**: Personal sync must not block or alter team sync.
+- **SYNC-9**: Before each batch, the engine must resolve the authenticated user and force `user_id` (or profile `id`) to that user; mismatched-owner rows must never be uploaded.
+- **SYNC-10**: Failures must expose the PostgREST code, message, table, and entity for diagnosis, both in logs and in the account status panel.
+- **SYNC-11**: Retries must use exponential backoff from 60 seconds up to 5 minutes and reset after a successful batch; the account screen must offer a manual retry.

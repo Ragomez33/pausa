@@ -18,6 +18,7 @@ import {
 import { useAuthSession } from '@/shared/hooks/useAuthSession';
 import { usePersonalSync } from '@/shared/hooks/usePersonalSync';
 import { usePersonalRestore } from '@/shared/hooks/usePersonalRestore';
+import { retryPersonalSyncNow } from '@/shared/services/syncEngine';
 import { showAppToast } from '@/shared/utils/toast';
 
 import { ACCOUNT_TOASTS } from '../utils/constants';
@@ -30,6 +31,10 @@ export interface AccountBackupState {
   preferences: BackupPreferences;
   backupStatus: ReturnType<typeof usePersonalSync>['status'];
   pendingCount: number;
+  errorCode: string | null;
+  errorMessage: string | null;
+  nextRetryAt: string | null;
+  retryNow: () => void;
   restoring: boolean;
   restoreProgress: string | null;
   adoptionNeeded: boolean;
@@ -147,6 +152,12 @@ export function useAccountBackup(ready: boolean): AccountBackupState {
     preferences,
     backupStatus: sync.status,
     pendingCount: sync.pendingCount,
+    errorCode: sync.lastErrorCode,
+    errorMessage: sync.lastErrorMessage,
+    nextRetryAt: sync.nextRetryAt,
+    retryNow: (): void => {
+      void retryPersonalSyncNow();
+    },
     restoring: restore.restoring,
     restoreProgress,
     adoptionNeeded,

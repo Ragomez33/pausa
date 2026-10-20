@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 
-import * as Updates from 'expo-updates';
 import { Alert, AppState, type AppStateStatus } from 'react-native';
 
 export function useAppUpdates(): void {
@@ -14,6 +13,9 @@ export function useAppUpdates(): void {
       }
 
       try {
+        // Expo Go does not include the native expo-updates module. Importing it
+        // dynamically keeps Expo Go usable while still enabling OTA in builds.
+        const Updates = await import('expo-updates');
         const update = await Updates.checkForUpdateAsync();
 
         if (!update.isAvailable) {

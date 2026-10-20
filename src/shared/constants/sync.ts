@@ -2,6 +2,7 @@ export const GUEST_SCOPE = 'guest';
 
 export const PERSONAL_SYNC_BATCH_SIZE = 25;
 export const PERSONAL_SYNC_RETRY_MS = 60_000;
+export const PERSONAL_SYNC_MAX_RETRY_MS = 300_000;
 export const PERSONAL_SYNC_SENT_RETENTION_DAYS = 7;
 
 export type PersonalSyncEntityType =

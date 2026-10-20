@@ -57,7 +57,8 @@ desde `/account` después de vincular una cuenta con email/magic link y otorgar 
   consentimiento separado.
 - La restauración en un dispositivo nuevo se hace por páginas y nunca sobrescribe datos locales
   más nuevos.
-- Migración remota: `supabase/migrations/0002_personal_data_sync.sql`.
+- Migración remota: `supabase/migrations/0002_personal_data_sync.sql` y
+  `supabase/migrations/0003_personal_data_grants.sql`.
 - Variables públicas necesarias: `EXPO_PUBLIC_SUPABASE_URL` y
   `EXPO_PUBLIC_SUPABASE_ANON_KEY`.
 - En el proyecto Supabase, habilita Email Auth y permite el redirect

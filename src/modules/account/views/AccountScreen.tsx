@@ -90,6 +90,27 @@ export function AccountScreen(): ReactElement {
             Restaurando {account.restoreProgress ?? ''}
           </Text>
         ) : null}
+        {account.errorMessage !== null ? (
+          <View className="mt-3 rounded-xl border border-accent-strong/30 bg-accent-strong/5 p-3">
+            <Text className="text-[10px] font-black uppercase tracking-[0.18em] text-accent-strong">
+              Detalle del error {account.errorCode !== null ? `· ${account.errorCode}` : ''}
+            </Text>
+            <Text className="mt-1 text-xs leading-5 text-text-secondary">
+              {account.errorMessage}
+            </Text>
+            {account.nextRetryAt !== null ? (
+              <Text className="mt-1 text-[10px] text-text-secondary">
+                Próximo reintento: {new Date(account.nextRetryAt).toLocaleTimeString()}
+              </Text>
+            ) : null}
+            <TouchableOpacity
+              onPress={account.retryNow}
+              className="mt-3 items-center rounded-lg bg-accent-strong py-2"
+            >
+              <Text className="text-xs font-bold text-white">Reintentar ahora</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
       </View>
 
       {account.authStatus !== 'authenticated' ? (
