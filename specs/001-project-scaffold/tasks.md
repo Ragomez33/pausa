@@ -131,6 +131,18 @@ utility/DB logic, so a minimal test set is included for the shared utilities and
 - [x] T041 Run the full `quickstart.md` validation checklist end-to-end and confirm all items pass
 - [x] T042 Final gate: run `npx tsc --noEmit` (0 errors) and `npm test` (0 failures) (constitution §5.6)
 - [x] T043 Git checkpoint: run `git status` and present the suggested commit message for user confirmation — do NOT commit or push automatically (constitution §5.9)
+- [x] T044–T047 Web/export hardening; see Phase 7 below.
+
+---
+
+## Phase 7: Web/Export Build Hardening
+
+**Purpose**: Fix the web/export resolution failures caused by ESM-only runtime entries and private icon imports.
+
+- [x] T044 [P] Add `@radix-ui/react-slot@1.2.0` as an explicit dependency in `package.json` (required by `expo-router/ui`).
+- [x] T045 [P] Update `metro.config.js` to keep `.mjs` resolution and register `.wasm` as an asset extension so Supabase/Radix and `expo-sqlite` web can resolve.
+- [x] T046 [P] Refactor `src/shared/components/icons.ts` to import Lucide icons from `lucide-react-native` root; delete `src/shared/types/lucide-cjs.d.ts` and remove all `dist/cjs` icon imports.
+- [x] T047 Run `npx expo export --platform all` and confirm Android, iOS, and web export with 0 resolution errors; run lint, typecheck, and tests.
 
 ---
 

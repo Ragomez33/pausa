@@ -3,13 +3,14 @@ const { withNativeWind } = require('nativewind/metro');
 
 const config = getDefaultConfig(__dirname);
 
-// Desactivar package exports modernos para evitar que dependencias tipo lru-cache/ESM
-// metan propiedades privadas (#private) incompatibles con Hermes
+// Keep legacy package resolution for Expo Router compatibility. Modern packages
+// such as @supabase/supabase-js and @radix-ui/react-slot publish their runtime
+// entry as .mjs, so Metro must be able to resolve that extension.
 config.resolver.unstable_enablePackageExports = false;
 
-// Filtrar extensiones .mjs para obligar a Metro a usar las distribuciones CJS compatibles
-config.resolver.sourceExts = config.resolver.sourceExts.filter(
-    (ext) => ext !== 'mjs'
-);
+// expo-sqlite loads its wa-sqlite runtime as a .wasm asset on web.
+if (!config.resolver.assetExts.includes('wasm')) {
+    config.resolver.assetExts.push('wasm');
+}
 
 module.exports = withNativeWind(config, { input: './global.css' });

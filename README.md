@@ -32,6 +32,7 @@ npm run android  # expo start --android
 ```bash
 npm run typecheck  # tsc --noEmit (0 errores)
 npm test           # jest (jest-expo)
+npx expo export --platform all  # build de Android, iOS y web
 ```
 
 ## Base de datos (Drizzle + SQLite)

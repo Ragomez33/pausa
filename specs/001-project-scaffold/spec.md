@@ -62,6 +62,8 @@ A developer finds project configuration (build profiles, app metadata with deep-
 - What happens when the local database file already exists from a previous run? Initialization MUST be idempotent and MUST NOT destroy existing data.
 - What happens when a deep link (e.g. `pausa://`) is opened before onboarding is complete? The shell MUST resolve routes; redirect logic is out of scope for this scaffold.
 - What happens if a required dependency is missing or version-incompatible? The install/build MUST fail loudly rather than boot a partially working shell.
+- What happens when a package publishes its runtime entry as `.mjs` or a web runtime uses `.wasm`? Metro MUST resolve those extensions so `npx expo export --platform all` completes.
+- What happens when an icon package exposes public subpaths? The app MUST import icons from the package root rather than private `dist/` paths.
 
 ## Requirements *(mandatory)*
 
@@ -81,6 +83,10 @@ EARS-syntax requirements (per constitution section 4):
 - **FR-010** (Ubiquitous): The system shall register a custom deep-linking scheme for the application.
 - **FR-011** (Ubiquitous): The system shall include the local-notification and database modules as platform plugins.
 - **FR-012** (Ubiquitous): The system shall establish the module and shared directory hierarchy defined by the constitution.
+- **FR-013** (Ubiquitous): The system shall declare `@radix-ui/react-slot` as an explicit dependency required by the Expo Router UI entry.
+- **FR-014** (Ubiquitous): The system shall resolve `.mjs` runtime entries and `.wasm` assets required by web dependencies.
+- **FR-015** (Ubiquitous): The system shall import all Lucide icons from the public `lucide-react-native` root entry, never from private `dist/cjs` icon paths.
+- **FR-016** (Event-driven): WHEN a contributor runs `npx expo export --platform all`, the system shall complete the web, iOS, and Android exports without resolution errors.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -97,6 +103,8 @@ EARS-syntax requirements (per constitution section 4):
 - **SC-003**: The project passes a strict type check with 0 errors on the initial scaffold.
 - **SC-004**: On first launch, the local database initializes and all 3 initial tables exist; on subsequent launches, initialization is idempotent with 0 data loss.
 - **SC-005**: A new developer can identify the correct destination for module-specific code (views, hooks, constants, db, utils) in under 2 minutes using the directory hierarchy and documentation.
+- **SC-006**: `npx expo export --platform all` completes successfully with 0 module-resolution errors for Android, iOS, and web.
+- **SC-007**: 0 direct imports from `lucide-react-native/dist/...` remain in the source tree.
 
 ## Assumptions
 
