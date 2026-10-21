@@ -133,6 +133,22 @@ EARS-syntax requirements (per constitution section 4):
 - **SC-008**: The app's first meaningful screen is not delayed by notification setup, with scheduling under 2 seconds once permission and profile are available.
 - **SC-009**: After permission is granted later, reminders resume on the next initialization/reset in 100% of tested cases.
 
+---
+
+## Amendment 2026-10-21 — Feature 014 (Notification Stability)
+
+Feature `014-notification-stability` supersedes the reset semantics below:
+
+- **FR-008 is superseded**: foreground (`active`) MUST NOT cancel or restart a pending idle reminder. It only ensures one is pending.
+- **FR-020 is refined**: background still leaves exactly one reminder, now anchored to the last real habit interaction.
+- The schedule target is `lastRealInteractionAt + interval`, not `now + interval`. If the anchored target already passed, a full interval from now is used.
+- A missing reminder is re-armed on the next `active`/`background` transition, so firing is no longer a terminal one-shot.
+- Orphan `active_smoking_session` rows (≥ 30 minutes at cold start) are deleted so they cannot suspend idle reminders forever.
+- Idle notifications now include `data.type = 'idle-reminder'`.
+- On Android 12+, one guidance message per installation points to "Alarms & reminders" because exact alarms cannot be verified through `expo-notifications` 0.32.
+
+See `specs/014-notification-stability/spec.md` for the authoritative requirements.
+
 ## Clarification Gates
 
 The constitution requires open product decisions to be stated before planning. The following points have recommended defaults and remain open for confirmation before `/speckit.plan`.

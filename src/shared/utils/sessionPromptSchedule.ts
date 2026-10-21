@@ -7,6 +7,8 @@ export const SESSION_NOTIFICATION_DATA_TYPE = 'smoking-session';
 export const SESSION_NOTIFICATION_ID_PREFIX = 'smoking-session';
 export const SESSION_PROMPT_INTERVAL_MINUTES = 5;
 export const SESSION_PROMPT_COUNT = 12;
+export const SESSION_PROMPT_MAX_MINUTES =
+  SESSION_PROMPT_INTERVAL_MINUTES * SESSION_PROMPT_COUNT;
 export const STALE_SESSION_MINUTES = 30;
 
 export interface SessionPrompt {
@@ -91,6 +93,49 @@ export function shouldOfferStaleSession(
     return false;
   }
   return nowMs - startedAtMs >= thresholdMinutes * 60_000;
+}
+
+/**
+ * Last five-minute boundary reached by the session, capped at the final prompt
+ * (60 minutes). Used by the foreground fallback so the UI can surface a prompt
+ * even when Android deferred or batched the OS alarms.
+ */
+export function computePromptBoundaryMinutes(
+  startedAtMs: number,
+  nowMs: number,
+): number {
+  if (!Number.isFinite(startedAtMs) || !Number.isFinite(nowMs)) {
+    return 0;
+  }
+
+  const elapsedMinutes = Math.floor((nowMs - startedAtMs) / 60_000);
+  if (elapsedMinutes < SESSION_PROMPT_INTERVAL_MINUTES) {
+    return 0;
+  }
+
+  const boundary =
+    Math.floor(elapsedMinutes / SESSION_PROMPT_INTERVAL_MINUTES) *
+    SESSION_PROMPT_INTERVAL_MINUTES;
+  return Math.min(boundary, SESSION_PROMPT_MAX_MINUTES);
+}
+
+/**
+ * Returns the new boundary the foreground UI should announce, or null when no
+ * boundary was crossed since the last announced one.
+ */
+export function resolveForegroundPromptMinutes(
+  startedAtMs: number,
+  lastAnnouncedMinutes: number,
+  nowMs: number,
+): number | null {
+  const boundary = computePromptBoundaryMinutes(startedAtMs, nowMs);
+  const safeLast = Number.isFinite(lastAnnouncedMinutes) ? lastAnnouncedMinutes : 0;
+
+  if (boundary <= safeLast) {
+    return null;
+  }
+
+  return boundary;
 }
 
 export function buildSmokingSessionNotificationData(input: {

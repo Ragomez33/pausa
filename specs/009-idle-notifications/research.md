@@ -68,3 +68,14 @@ Format per decision: **Decision / Rationale / Alternatives considered**.
 ## Resolved unknowns
 
 All Technical Context fields are resolved; no `NEEDS CLARIFICATION` markers remain. Spec Clarification Gates are resolved by R1 (batch replacement), R2 (bounds), and R5 (reset triggers).
+
+---
+
+## Amendment 2026-10-21 — Feature 014
+
+- R4's "schedule at `now + interval`" is superseded: the DATE target is anchored to the last real habit interaction (`smoking_events` / `pause_events`), and `now + interval` is only a fallback when that target is already past.
+- R5's "reset on `active` and `background`" is superseded: `active` uses `ensure` (never cancels or restarts), `background` resets from the anchor, and real interactions reset explicitly.
+- A single DATE trigger is kept; re-arming happens on lifecycle transitions instead of relying on a one-shot delivery.
+- Orphan active sessions (≥ 30 minutes) are released at cold start; this was not considered in the original research.
+- True exact-alarm verification is unavailable in `expo-notifications` 0.32; see `specs/014-notification-stability/research.md` R2.
+

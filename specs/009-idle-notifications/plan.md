@@ -105,3 +105,15 @@ src/
 ## Complexity Tracking
 
 > No constitution violations; section intentionally empty.
+
+---
+
+## Amendment 2026-10-21 — Feature 014
+
+- Idle scheduling is anchored to `getLatestHabitInteractionAtMs()`; `now + interval` is only used when the anchored target already passed.
+- `ensureIdleNotificationFromProfile()` is used on `active`/cold start and never cancels a pending reminder; `resetIdleNotificationFromProfile()` is used on `background` and after real habit interactions.
+- Cold-start orphan-session cleanup runs before idle evaluation and cancels `smoking-session:` prompts.
+- A one-time Android 12+ exact-alarm guidance message is added (persisted in `sync_state`).
+- Session prompts gain a foreground fallback and re-sync in `useSmokingSession`.
+- See `specs/014-notification-stability/`.
+

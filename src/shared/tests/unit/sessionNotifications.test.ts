@@ -7,6 +7,7 @@ import {
 
 jest.mock('@/db/queries', () => ({
   getProfile: jest.fn(),
+  getLatestHabitInteractionAtMs: jest.fn(),
 }));
 
 jest.mock('expo-notifications', () => ({

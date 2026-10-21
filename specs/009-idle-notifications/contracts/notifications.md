@@ -73,3 +73,25 @@ export async function resetIdleNotificationFromProfile(): Promise<IdleScheduleRe
 - `useAwarenessLoop.confirmPostpone` calls `resetIdleNotificationFromProfile()` after a successful increment.
 - `useSmokingSession.finishSession` calls `resetIdleNotificationFromProfile()` after a successful completion or discard.
 - Session notifications use the `smoking-session:` prefix and the `smoking-session` channel; idle cancellation never touches them.
+
+---
+
+## Amendment 2026-10-21 — Feature 014
+
+```ts
+export interface IdleScheduleInput {
+  dailyCigarettes: number;
+  lastInteractionAtMs: number;
+  nowMs?: number;
+}
+
+export function scheduleIdleNotification(input: IdleScheduleInput): Promise<IdleScheduleResult>;
+export function ensureIdleNotificationFromProfile(nowMs?: number): Promise<IdleScheduleResult>;
+```
+
+- The DATE target is `lastInteractionAtMs + interval`, falling back to `nowMs + interval` when the target already passed.
+- `ensureIdleNotificationFromProfile` MUST NOT cancel an existing `idle-reminder`; it only schedules when none is pending.
+- Idle content includes `data: { type: 'idle-reminder' }`.
+- The exact title/body and the identifier/prefix-scoped cancellation rules are unchanged.
+- Orphan-session cleanup and exact-alarm guidance live in the app lifecycle hook; see `specs/014-notification-stability/contracts/notifications.md`.
+

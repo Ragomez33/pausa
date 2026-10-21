@@ -3,13 +3,16 @@ import {
   SESSION_NOTIFICATION_DATA_TYPE,
   SESSION_PROMPT_COUNT,
   SESSION_PROMPT_INTERVAL_MINUTES,
+  SESSION_PROMPT_MAX_MINUTES,
   buildSessionNotificationIdentifier,
   buildSessionPromptBody,
   buildSmokingSessionNotificationData,
+  computePromptBoundaryMinutes,
   computeSessionPrompts,
   createSessionId,
   isSessionNotificationIdentifier,
   readSmokingSessionNotificationData,
+  resolveForegroundPromptMinutes,
   shouldOfferStaleSession,
 } from '../../utils/sessionPromptSchedule';
 
@@ -86,6 +89,28 @@ describe('shouldOfferStaleSession', () => {
   it('handles invalid input safely', () => {
     expect(shouldOfferStaleSession(Number.NaN, 1)).toBe(false);
     expect(shouldOfferStaleSession(0, Number.NaN)).toBe(false);
+  });
+});
+
+describe('foreground prompt fallback', () => {
+  const startedAtMs = 1_000_000;
+
+  it('resolves the latest five-minute boundary', () => {
+    expect(computePromptBoundaryMinutes(startedAtMs, startedAtMs + 4 * 60_000)).toBe(0);
+    expect(computePromptBoundaryMinutes(startedAtMs, startedAtMs + 12 * 60_000)).toBe(10);
+    expect(computePromptBoundaryMinutes(startedAtMs, startedAtMs + 31 * 60_000)).toBe(30);
+  });
+
+  it('caps the boundary at the last prompt', () => {
+    expect(computePromptBoundaryMinutes(startedAtMs, startedAtMs + 90 * 60_000)).toBe(
+      SESSION_PROMPT_MAX_MINUTES,
+    );
+  });
+
+  it('announces only newly crossed boundaries', () => {
+    expect(resolveForegroundPromptMinutes(startedAtMs, 0, startedAtMs + 30 * 60_000)).toBe(30);
+    expect(resolveForegroundPromptMinutes(startedAtMs, 30, startedAtMs + 32 * 60_000)).toBeNull();
+    expect(resolveForegroundPromptMinutes(startedAtMs, 30, startedAtMs + 46 * 60_000)).toBe(45);
   });
 });
 

@@ -1,18 +1,19 @@
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 
-import { getProfile } from '@/db/queries';
+import { getLatestHabitInteractionAtMs, getProfile } from '@/db/queries';
 import type { SmokingTrigger } from '@/shared/constants/smoking';
 import {
   IDLE_NOTIFICATION_BODY,
   IDLE_NOTIFICATION_CHANNEL_ID,
+  IDLE_NOTIFICATION_DATA_TYPE,
   IDLE_NOTIFICATION_ID,
   IDLE_NOTIFICATION_TITLE,
   SESSION_NOTIFICATION_CHANNEL_ID,
   SESSION_NOTIFICATION_TITLE,
 } from '@/shared/constants/notifications';
 
-import { computeIdleSchedule } from './reminderSchedule';
+import { computeIdleScheduleFromAnchor } from './reminderSchedule';
 import {
   SESSION_NOTIFICATION_ID_PREFIX,
   buildSessionPromptBody,
@@ -24,6 +25,12 @@ export interface IdleScheduleResult {
   scheduled: boolean;
   permissionGranted: boolean;
   error: Error | null;
+}
+
+export interface IdleScheduleInput {
+  dailyCigarettes: number;
+  lastInteractionAtMs: number;
+  nowMs?: number;
 }
 
 export interface SessionPromptScheduleResult {
@@ -78,6 +85,11 @@ async function cancelSessionNotificationsInternal(): Promise<void> {
   await cancelNotificationsByPrefix(SESSION_NOTIFICATION_ID_PREFIX);
 }
 
+async function hasPendingIdleNotificationInternal(): Promise<boolean> {
+  const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+  return scheduled.some((request) => request.identifier === IDLE_NOTIFICATION_ID);
+}
+
 export function configureNotificationHandler(): void {
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
@@ -96,6 +108,11 @@ export async function requestNotificationPermissions(): Promise<boolean> {
   }
   const requested = await Notifications.requestPermissionsAsync();
   return requested.granted;
+}
+
+async function hasNotificationPermission(): Promise<boolean> {
+  const current = await Notifications.getPermissionsAsync();
+  return current.granted;
 }
 
 async function configureAndroidChannels(): Promise<void> {
@@ -118,48 +135,61 @@ async function configureAndroidChannels(): Promise<void> {
   });
 }
 
-export function scheduleIdleNotification(dailyCigarettes: number): Promise<IdleScheduleResult> {
-  return enqueue(async () => {
-    let permissionGranted = false;
+export function scheduleIdleNotification(
+  input: IdleScheduleInput,
+): Promise<IdleScheduleResult> {
+  return enqueue(() => scheduleIdleNotificationTask(input));
+}
 
-    try {
-      await configureAndroidChannels();
-      permissionGranted = await requestNotificationPermissions();
-      if (!permissionGranted) {
-        await cancelIdleNotificationInternal();
-        return { scheduled: false, permissionGranted: false, error: null };
-      }
+async function scheduleIdleNotificationTask(
+  input: IdleScheduleInput,
+): Promise<IdleScheduleResult> {
+  let permissionGranted = false;
 
+  try {
+    await configureAndroidChannels();
+    permissionGranted = await requestNotificationPermissions();
+    if (!permissionGranted) {
       await cancelIdleNotificationInternal();
-
-      const schedule = computeIdleSchedule(Date.now(), dailyCigarettes);
-      await Notifications.scheduleNotificationAsync({
-        identifier: IDLE_NOTIFICATION_ID,
-        content: {
-          title: IDLE_NOTIFICATION_TITLE,
-          body: IDLE_NOTIFICATION_BODY,
-        },
-        trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.DATE,
-          date: new Date(schedule.scheduledAtMs),
-          channelId: IDLE_NOTIFICATION_CHANNEL_ID,
-        },
-      });
-
-      return { scheduled: true, permissionGranted: true, error: null };
-    } catch (caught) {
-      try {
-        await cancelIdleNotificationInternal();
-      } catch {
-        // A failed cleanup must not mask the original scheduling error.
-      }
-      return {
-        scheduled: false,
-        permissionGranted,
-        error: toError(caught),
-      };
+      return { scheduled: false, permissionGranted: false, error: null };
     }
-  });
+
+    await cancelIdleNotificationInternal();
+
+    const nowMs = input.nowMs ?? Date.now();
+    const schedule = computeIdleScheduleFromAnchor(
+      input.lastInteractionAtMs,
+      nowMs,
+      input.dailyCigarettes,
+    );
+
+    await Notifications.scheduleNotificationAsync({
+      identifier: IDLE_NOTIFICATION_ID,
+      content: {
+        title: IDLE_NOTIFICATION_TITLE,
+        body: IDLE_NOTIFICATION_BODY,
+        data: { type: IDLE_NOTIFICATION_DATA_TYPE },
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: new Date(schedule.scheduledAtMs),
+        channelId: IDLE_NOTIFICATION_CHANNEL_ID,
+      },
+    });
+
+    return { scheduled: true, permissionGranted: true, error: null };
+  } catch (caught) {
+    try {
+      await cancelIdleNotificationInternal();
+    } catch {
+      // A failed cleanup must not mask the original scheduling error.
+    }
+    return {
+      scheduled: false,
+      permissionGranted,
+      error: toError(caught),
+    };
+  }
 }
 
 export function cancelIdleNotification(): Promise<void> {
@@ -168,12 +198,55 @@ export function cancelIdleNotification(): Promise<void> {
   });
 }
 
+/**
+ * Re-arms the idle reminder only when none is pending. This is used on
+ * foreground transitions: it never cancels or restarts an existing reminder,
+ * so frequently opening the app no longer prevents it from being delivered.
+ */
+export function ensureIdleNotificationFromProfile(
+  nowMs?: number,
+): Promise<IdleScheduleResult> {
+  return enqueue(async () => {
+    if (await hasPendingIdleNotificationInternal()) {
+      if (await hasNotificationPermission()) {
+        return { scheduled: false, permissionGranted: true, error: null };
+      }
+      await cancelIdleNotificationInternal();
+      return { scheduled: false, permissionGranted: false, error: null };
+    }
+
+    const profile = getProfile();
+    if (profile === null) {
+      return { scheduled: false, permissionGranted: false, error: null };
+    }
+
+    const safeNow = nowMs ?? Date.now();
+    return scheduleIdleNotificationTask({
+      dailyCigarettes: profile.dailyCigarettes,
+      lastInteractionAtMs: getLatestHabitInteractionAtMs() ?? safeNow,
+      nowMs: safeNow,
+    });
+  });
+}
+
+/**
+ * Cancels and re-schedules the reminder anchored to the latest real habit
+ * interaction. Opening the app alone does not call this.
+ */
 export function resetIdleNotificationFromProfile(): Promise<IdleScheduleResult> {
-  const profile = getProfile();
-  if (profile === null) {
-    return Promise.resolve({ scheduled: false, permissionGranted: false, error: null });
-  }
-  return scheduleIdleNotification(profile.dailyCigarettes);
+  return enqueue(async () => {
+    const profile = getProfile();
+    if (profile === null) {
+      return { scheduled: false, permissionGranted: false, error: null };
+    }
+
+    const nowMs = Date.now();
+    return scheduleIdleNotificationTask({
+      dailyCigarettes: profile.dailyCigarettes,
+      lastInteractionAtMs: getLatestHabitInteractionAtMs() ?? nowMs,
+      nowMs,
+    });
+  });
 }
 
 export function scheduleSessionPrompts(

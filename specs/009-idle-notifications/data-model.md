@@ -66,3 +66,30 @@ one_pending
 ## Out of scope
 
 Remote push/FCM/APNs, backend scheduling, user-configurable intervals, multiple simultaneous reminders, quiet hours beyond the interval formula, and database changes.
+
+---
+
+## Amendment 2026-10-21 — Feature 014
+
+### Idle anchor
+
+| Field | Meaning |
+|-------|---------|
+| `anchorMs` | Max timestamp across `smoking_events` and `pause_events`; now when there is no history |
+| `scheduledAtMs` | `anchorMs + interval`; `now + interval` when the anchored target already passed |
+
+### Amended reset triggers
+
+| Trigger | Effect |
+|---------|--------|
+| App initial ready (cold start) | Release orphan session (≥ 30 min); ensure exactly one reminder |
+| App becomes active | Do **not** cancel or restart; ensure one reminder is pending |
+| App becomes background | Cancel and schedule anchored to the last interaction |
+| Confirmed postponement | Cancel and schedule anchored to the new pause event |
+| Completed/discarded session | Cancel and schedule anchored to the latest event |
+| Notification fires | No pending reminder remains; the next `active`/`background` re-arms it |
+
+### Orphan session rule
+
+An `active_smoking_session` row whose `started_at_ms` is ≥ 30 minutes old, in the future, or non-finite is deleted at cold start and its `smoking-session:` notifications are cancelled.
+

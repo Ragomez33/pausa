@@ -238,6 +238,46 @@ export function getLatestCededTimestamp(): string | null {
   return rows[0]?.timestamp ?? null;
 }
 
+export function getLatestPauseEventTimestamp(): string | null {
+  const scope = getActiveScope();
+  const rows = db
+    .select({ timestamp: max(pauseEvents.timestamp) })
+    .from(pauseEvents)
+    .where(
+      isGuestScope(scope)
+        ? isNull(pauseEvents.ownerUserId)
+        : eq(pauseEvents.ownerUserId, scope),
+    )
+    .all();
+
+  return rows[0]?.timestamp ?? null;
+}
+
+/**
+ * Most recent real habit interaction (completed or ongoing smoking event, or a
+ * postponed pause). Used to anchor the idle reminder so merely opening the app
+ * does not reset the timer.
+ */
+export function getLatestHabitInteractionAtMs(): number | null {
+  const candidates = [
+    getLatestSmokingEventTimestamp(),
+    getLatestPauseEventTimestamp(),
+  ];
+
+  let latestMs = 0;
+  for (const candidate of candidates) {
+    if (candidate === null) {
+      continue;
+    }
+    const parsedMs = Date.parse(candidate);
+    if (Number.isFinite(parsedMs) && parsedMs > latestMs) {
+      latestMs = parsedMs;
+    }
+  }
+
+  return latestMs > 0 ? latestMs : null;
+}
+
 export function createPauseEvent(input: NewPauseEvent): PauseEvent {
   return db.insert(pauseEvents).values(input).returning().get();
 }

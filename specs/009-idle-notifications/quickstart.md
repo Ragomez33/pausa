@@ -34,17 +34,21 @@ End-to-end validation guide. See `data-model.md` and `contracts/` for formulas a
 ## 4. Resets
 
 1. With a reminder pending, open the app / return from background.
-   **Expected**: the previous reminder is cancelled and exactly one new reminder is scheduled.
+   **Expected (amended by 014)**: opening the app does **not** cancel or move the pending reminder; returning from background leaves exactly one reminder anchored to the last real interaction.
 2. Confirm a postponement.
-   **Expected**: the timer resets the same way.
+   **Expected**: the timer re-anchors to that interaction.
 3. Complete a smoking session.
-   **Expected**: the timer resets the same way.
+   **Expected**: the timer re-anchors to that interaction.
 4. Start a smoking session while an idle reminder is pending.
    **Expected**: the idle reminder is cancelled and no new idle reminders are scheduled while the session is active; pending `smoking-session:` prompts are unaffected.
 5. Finish or discard the session.
    **Expected**: session notifications are cancelled and exactly one idle reminder is scheduled again.
 6. Trigger several resets quickly.
    **Expected**: at most one pending reminder remains.
+7. Let the reminder fire while the app is closed, then reopen.
+   **Expected**: exactly one new reminder is scheduled one interval later (re-arm).
+8. Start a session, force-stop the app, wait 30+ minutes, relaunch.
+   **Expected**: the orphan session row is cleared and idle reminders resume.
 
 ## 5. Permission denied
 

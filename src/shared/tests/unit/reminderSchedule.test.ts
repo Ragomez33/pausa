@@ -3,6 +3,7 @@ import {
   MIN_REMINDER_INTERVAL_MINUTES,
   calculateIdleIntervalMinutes,
   computeIdleSchedule,
+  computeIdleScheduleFromAnchor,
 } from '../../utils/reminderSchedule';
 
 describe('calculateIdleIntervalMinutes', () => {
@@ -40,5 +41,31 @@ describe('computeIdleSchedule', () => {
 
     expect(schedule.intervalMinutes).toBe(48);
     expect(Number.isFinite(schedule.scheduledAtMs)).toBe(true);
+  });
+});
+
+describe('computeIdleScheduleFromAnchor', () => {
+  const now = 10_000_000;
+  const intervalMs = 48 * 60_000;
+
+  it('keeps the target anchored to the last interaction', () => {
+    const lastInteraction = now - 10 * 60_000;
+    const schedule = computeIdleScheduleFromAnchor(lastInteraction, now, 20);
+
+    expect(schedule.intervalMinutes).toBe(48);
+    expect(schedule.scheduledAtMs).toBe(lastInteraction + intervalMs);
+  });
+
+  it('starts a fresh interval when the anchored target already passed', () => {
+    const lastInteraction = now - 60 * 60_000;
+    const schedule = computeIdleScheduleFromAnchor(lastInteraction, now, 20);
+
+    expect(schedule.scheduledAtMs).toBe(now + intervalMs);
+  });
+
+  it('falls back to now for an invalid interaction timestamp', () => {
+    const schedule = computeIdleScheduleFromAnchor(Number.NaN, now, 20);
+
+    expect(schedule.scheduledAtMs).toBe(now + intervalMs);
   });
 });

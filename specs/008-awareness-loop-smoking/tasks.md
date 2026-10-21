@@ -168,6 +168,17 @@ helpers, and notifications service are foundational because multiple stories dep
 - [X] T051 Remove every in-app "¿Terminaste?" modal; keep only the local system notification and a non-blocking inline stale-session card.
 - [X] T052 Update unit tests for merged history, today counts, streak restart, notification triggers, and run lint, typecheck, and tests.
 
+## Phase 10: Stability Corrections — Feature 014
+
+**Purpose**: Fix batched session prompts (Doze / missing exact-alarm access), foreground loss of idle reminders, and orphan sessions that permanently suspended reminders.
+
+- [X] T053 Add `computeIdleScheduleFromAnchor` and anchor idle reminders to the last real habit interaction (see `specs/014-notification-stability`).
+- [X] T054 Add `ensureIdleNotificationFromProfile` so foreground transitions never cancel or restart a pending reminder.
+- [X] T055 Release orphan `active_smoking_session` rows (≥ 30 min) at cold start and cancel their session prompts.
+- [X] T056 Add Android 12+ exact-alarm guidance once per installation and document the `expo-notifications` 0.32 API gap.
+- [X] T057 Add the session foreground fallback: recompute elapsed time, announce the latest crossed 5-minute boundary in a dismissible card, and re-schedule remaining prompts.
+- [X] T058 Update unit tests and run `npx tsc --noEmit`, `npx expo lint`, `npm test`.
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

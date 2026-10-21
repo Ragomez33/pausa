@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { AppState } from 'react-native';
+
 import {
   clearActiveSmokingSession,
   getActiveSmokingSession,
@@ -20,7 +22,9 @@ import { enqueuePersonalSync } from '@/shared/services/syncEngine';
 import { getBackupPreferences } from '@/shared/services/syncPreferences';
 import { buildSmokingSyncPayload } from '@/shared/utils/personalSyncPayloads';
 import {
+  computePromptBoundaryMinutes,
   createSessionId,
+  resolveForegroundPromptMinutes,
   shouldOfferStaleSession,
 } from '@/shared/utils/sessionPromptSchedule';
 import { showAppToast } from '@/shared/utils/toast';
@@ -31,10 +35,12 @@ export interface UseSmokingSessionResult {
   trigger: SmokingTrigger;
   elapsedSeconds: number;
   staleSession: boolean;
+  foregroundPromptMinutes: number | null;
   finishing: boolean;
   missingSession: boolean;
   finishSession: () => boolean;
   discardSession: () => boolean;
+  dismissForegroundPrompt: () => void;
 }
 
 function resolveActiveSession(
@@ -71,12 +77,14 @@ export function useSmokingSession(
   const startedAtRef = useRef(Date.now());
   const finishingRef = useRef(false);
   const staleShownRef = useRef(false);
+  const promptBoundaryRef = useRef(0);
   const mountedRef = useRef(true);
 
   const [missingSession, setMissingSession] = useState(false);
   const [sessionTrigger, setSessionTrigger] = useState<SmokingTrigger>(trigger);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [staleSession, setStaleSession] = useState(false);
+  const [foregroundPromptMinutes, setForegroundPromptMinutes] = useState<number | null>(null);
   const [finishing, setFinishing] = useState(false);
 
   useEffect(() => {
@@ -103,6 +111,11 @@ export function useSmokingSession(
     const initialElapsed = elapsedSecondsSince(resolvedSession.startedAtMs, Date.now());
     sessionRef.current = resolvedSession;
     startedAtRef.current = resolvedSession.startedAtMs;
+    promptBoundaryRef.current = computePromptBoundaryMinutes(
+      resolvedSession.startedAtMs,
+      Date.now(),
+    );
+    setForegroundPromptMinutes(null);
 
     if (shouldOfferStaleSession(resolvedSession.startedAtMs, Date.now())) {
       staleShownRef.current = true;
@@ -135,10 +148,16 @@ export function useSmokingSession(
     });
 
     const interval = setInterval(() => {
-      const elapsed = elapsedSecondsSince(startedAtRef.current, Date.now());
+      const now = Date.now();
+      const elapsed = elapsedSecondsSince(startedAtRef.current, now);
       setElapsedSeconds(elapsed);
 
-      if (!staleShownRef.current && shouldOfferStaleSession(startedAtRef.current, Date.now())) {
+      const boundary = computePromptBoundaryMinutes(startedAtRef.current, now);
+      if (boundary > promptBoundaryRef.current) {
+        promptBoundaryRef.current = boundary;
+      }
+
+      if (!staleShownRef.current && shouldOfferStaleSession(startedAtRef.current, now)) {
         staleShownRef.current = true;
         setStaleSession(true);
       }
@@ -153,6 +172,42 @@ export function useSmokingSession(
       void resetIdleNotificationFromProfile();
     };
   }, [requestedSessionId, trigger]);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state !== 'active') {
+        return;
+      }
+
+      const activeSession = sessionRef.current;
+      if (activeSession === null) {
+        return;
+      }
+
+      const now = Date.now();
+      setElapsedSeconds(elapsedSecondsSince(activeSession.startedAtMs, now));
+
+      const boundary = resolveForegroundPromptMinutes(
+        activeSession.startedAtMs,
+        promptBoundaryRef.current,
+        now,
+      );
+      if (boundary !== null) {
+        promptBoundaryRef.current = boundary;
+        setForegroundPromptMinutes(boundary);
+      }
+
+      void scheduleSessionPrompts({
+        sessionId: activeSession.id,
+        startedAtMs: activeSession.startedAtMs,
+        triggerEmotion: isSmokingTrigger(activeSession.triggerEmotion)
+          ? activeSession.triggerEmotion
+          : 'habit',
+      });
+    });
+
+    return () => subscription.remove();
+  }, []);
 
   const finishSession = useCallback((): boolean => {
     const activeSession = sessionRef.current;
@@ -186,6 +241,7 @@ export function useSmokingSession(
 
     sessionRef.current = null;
     setStaleSession(false);
+    setForegroundPromptMinutes(null);
     setFinishing(false);
     const ownerUserId = getScopedOwnerUserId();
     if (ownerUserId !== null && result.event !== null) {
@@ -235,6 +291,7 @@ export function useSmokingSession(
 
     sessionRef.current = null;
     setStaleSession(false);
+    setForegroundPromptMinutes(null);
     setFinishing(false);
     void cancelSessionPrompts();
     void resetIdleNotificationFromProfile();
@@ -246,13 +303,19 @@ export function useSmokingSession(
     return true;
   }, []);
 
+  const dismissForegroundPrompt = useCallback((): void => {
+    setForegroundPromptMinutes(null);
+  }, []);
+
   return {
     trigger: sessionTrigger,
     elapsedSeconds,
     staleSession,
+    foregroundPromptMinutes,
     finishing,
     missingSession,
     finishSession,
     discardSession,
+    dismissForegroundPrompt,
   };
 }

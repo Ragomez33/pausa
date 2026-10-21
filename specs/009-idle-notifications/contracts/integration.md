@@ -32,3 +32,13 @@ Thin integration points; no new routes.
 ## Deep-linking
 
 No new routes. Existing `pausa://` behavior is unchanged.
+
+---
+
+## Amendment 2026-10-21 — Feature 014
+
+- **R-LIFE-11 is superseded**: `active` MUST use `ensureIdleNotificationFromProfile()` and MUST NOT cancel or restart a pending reminder. `background` MUST use `resetIdleNotificationFromProfile()` anchored to the last real interaction.
+- **R-LIFE-13**: Cold start MUST release an orphan `active_smoking_session` (≥ 30 minutes, invalid, or future) and cancel pending `smoking-session:` prompts.
+- **R-LIFE-14**: On Android 12+ the app MUST show one exact-alarm guidance message per installation, after permission is granted.
+- **R-LIFE-15**: During an active session, returning to the foreground MUST recompute elapsed time, surface the latest crossed 5-minute boundary, and re-schedule remaining prompts.
+

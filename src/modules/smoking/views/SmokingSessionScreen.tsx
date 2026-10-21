@@ -18,10 +18,12 @@ export function SmokingSessionScreen(): ReactElement {
     trigger: sessionTrigger,
     elapsedSeconds,
     staleSession,
+    foregroundPromptMinutes,
     finishing,
     missingSession,
     finishSession,
     discardSession,
+    dismissForegroundPrompt,
   } = useSmokingSession(trigger, sessionId);
 
   useEffect(() => {
@@ -59,6 +61,23 @@ export function SmokingSessionScreen(): ReactElement {
       <Text className="mt-8 text-center text-sm text-text-secondary">
         Recibirás un aviso cada cinco minutos. Puedes seguir fumando o terminar cuando quieras.
       </Text>
+
+      {foregroundPromptMinutes !== null ? (
+        <View className="mt-6 w-full rounded-2xl border border-border-card bg-card p-5">
+          <Text className="text-center text-base font-bold text-text-primary">
+            Llevas {foregroundPromptMinutes} minutos fumando
+          </Text>
+          <Text className="mt-2 text-center text-sm text-text-secondary">
+            Cierra la sesión cuando termines para que el registro sea preciso.
+          </Text>
+          <TouchableOpacity
+            onPress={dismissForegroundPrompt}
+            className="mt-4 items-center rounded-xl border border-border-card py-3 active:bg-card/70"
+          >
+            <Text className="font-bold text-text-secondary">Entendido</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
 
       {staleSession ? (
         <View className="mt-6 w-full rounded-2xl border border-brand-amber/30 bg-brand-amber/10 p-5">

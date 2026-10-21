@@ -31,3 +31,27 @@ export function computeIdleSchedule(nowMs: number, dailyCigarettes: number): Idl
     scheduledAtMs: safeNow + intervalMinutes * 60_000,
   };
 }
+
+/**
+ * Anchors the next idle reminder to the last real habit interaction instead of
+ * "now". Opening the app therefore no longer postpones the reminder: the target
+ * keeps the original interaction + interval. When that target is already in the
+ * past (the reminder was missed or the user stayed in the app), a full new
+ * interval starts from `nowMs` to avoid firing immediately on foreground.
+ */
+export function computeIdleScheduleFromAnchor(
+  lastInteractionAtMs: number,
+  nowMs: number,
+  dailyCigarettes: number,
+): IdleSchedule {
+  const safeNow = Number.isFinite(nowMs) ? nowMs : Date.now();
+  const intervalMinutes = calculateIdleIntervalMinutes(dailyCigarettes);
+  const intervalMs = intervalMinutes * 60_000;
+  const anchorMs = Number.isFinite(lastInteractionAtMs) ? lastInteractionAtMs : safeNow;
+  const anchorTargetMs = anchorMs + intervalMs;
+
+  return {
+    intervalMinutes,
+    scheduledAtMs: anchorTargetMs > safeNow ? anchorTargetMs : safeNow + intervalMs,
+  };
+}
